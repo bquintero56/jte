@@ -1,0 +1,188 @@
+# Contexto del proyecto: CI/CD de componentes JBoss con Jenkins + JTE
+
+Idioma de trabajo: **español** (comentarios, logs, mensajes de error y correos).
+
+> Estado: **estructura inicial**. Las secciones marcadas con `POR COMPLETAR` las llena el usuario (arquitectura, servidores,
+> componentes, flujo actual). Claude no debe inventar esos datos: si faltan, preguntar.
+
+## 1. Qué es esto
+
+Pipelines de **despliegue (CI/CD)** que corren en Jenkins con **Jenkins Templating Engine (JTE)** y despliegan componentes en
+servidores **JBoss / WildFly** por **SSH** desde el nodo de Jenkins.
+
+- `POR COMPLETAR`: qué componentes se despliegan (`.war`, `.ear`, `.jar`, módulos, configuración), en qué servidores y ambientes.
+- `POR COMPLETAR`: cómo se hace hoy (manual, scripts existentes, `jboss-cli`, copia a `deployments/`...). "Ya tengo algo": pegarlo aquí.
+
+**Repos hermanos (referencia, mismo estándar JTE, ya funcionando en Jenkins):**
+- `jte-automatizaciones` (`C:\Users\bquin\Desktop\jte\jte-automatizaciones\jte-automatizaciones`): pipelines por **SSH + sudo** desde el nodo,
+  correo HTML con `emailext`, adjuntos, CC, cron con zona horaria. Su CLAUDE.md documenta el patrón SSH probado.
+- `jte-automatizaciones-postman` (`C:\Users\bquin\Desktop\jte\jte-automatizaciones-postman`): `curl` con OAuth 2.0, proxy con credencial,
+  certificados, credenciales con `withCredentials`, diagnóstico de errores en log.
+
+Reutilizar de ahí lo que sirva en lugar de reinventarlo.
+
+## 2. Cómo funciona JTE (resumen para trabajar aquí)
+
+JTE separa un pipeline en tres piezas. Un **template** común orquesta; cada job aporta solo su **configuración**; la **lógica** vive en
+**librerías** reutilizables.
+
+| Pieza | Archivo | Qué hace |
+|---|---|---|
+| **Pipeline configuration** | `pipeline_config.groovy` | Solo valores: qué template usar, qué librerías cargar y sus parámetros. DSL propio (no es Groovy de pipeline). |
+| **Pipeline template** | `<nombre>.groovy` | El "Jenkinsfile" genérico: llama a los steps en orden (`stage`, `node`, `try/finally`). Sin valores quemados. |
+| **Librería** | `<libreria>/library_config.groovy` + `<libreria>/steps/*.groovy` | Cada archivo de `steps/` es un step que el template invoca por su nombre. `library_config.groovy` valida los campos de la config. |
+
+### Bloques del `pipeline_config.groovy`
+
+```groovy
+jte {
+    allow_scm_jenkinsfile = false                       // ignora un Jenkinsfile en el repo de la app
+    pipeline_template     = 'desplegar-jboss/desplegar_jboss.groovy'
+}
+
+keywords {                                              // variables globales que el template lee directamente
+    jenkins_agent_label = 'linux-pro'
+    execution { time = 30; units = 'MINUTES' }
+}
+
+application_environments {                              // ambientes: cada uno queda como variable en el template (dev, qa, prod)
+    dev  { long_name = 'Desarrollo' }
+    qa   { long_name = 'QA' }
+    prod { long_name = 'Producción' }
+}
+
+libraries {
+    despliegue_jboss {                                  // = nombre de la carpeta de la librería
+        campo = 'valor'                                 // llega al step como config.campo
+    }
+    notificacion_correo { destinatarios = '...' }
+}
+```
+
+- **`application_environments`** es la pieza clave para CI/CD: cada ambiente es un objeto que el template puede pasar a un step
+  (`desplegar(qa)`), y puede tener campos propios (`servidores`, `rutaDeployments`...). Evita duplicar config por ambiente.
+- **`keywords`**: valores globales accesibles en el template por su nombre (`jenkins_agent_label`, `execution.time`).
+
+### Reglas que JTE exige (si se rompen, el job falla)
+
+- Nombre del bloque en `libraries { }` = **nombre exacto de la carpeta** de la librería.
+- Nombre del archivo del step = nombre con que se llama (`desplegar_componente.groovy` → `desplegar_componente(...)`).
+- Dentro de un step, `config` es el bloque de **esa** librería.
+- **Todo campo** de la config debe estar en `library_config.groovy` (`required { }` u `optional { }`), si no: `field 'x' is not used`.
+  Tipos: `String`, `Integer`, `Boolean`, `List`, `Map`, etc.
+- Un step es `def call(...)` (puede recibir argumentos y devolver valores) y puede usar cualquier step de Jenkins (`sh`, `withCredentials`...).
+- **Hooks** opcionales en steps con anotaciones: `@Init`, `@Validate`, `@CleanUp`, `@Notify`, `@BeforeStep`, `@AfterStep`
+  (ej. un `@CleanUp` que limpie el workspace o un `@Notify` que mande el correo siempre).
+- **Recursos de librería**: una carpeta `resources/` dentro de la librería; desde un step se lee con `resource('script.sh')`. Útil para
+  scripts shell o `jboss-cli` largos sin meterlos en strings Groovy.
+
+### Cómo se configura en Jenkins
+
+- El job (o la carpeta que lo contiene) debe usar **JTE**: *Pipeline → Definition: Jenkins Templating Engine*, o fuentes JTE en la carpeta
+  (*Folder → Configure → Jenkins Templating Engine*), con este repo y su *Base Directory*:
+
+  | Fuente JTE | Base Directory |
+  |---|---|
+  | Pipeline Configuration / Templates | `jte-pipeline-configurations-automations/<job>` y `jte-pipelines-template` |
+  | Library Source | `jte-automations-pipeline-libraries` |
+
+- **Error ya visto:** `No such DSL method 'libraries'` → el job ejecuta `pipeline_config.groovy` como Jenkinsfile normal (*Pipeline script
+  from SCM*). Hay que cambiar el job a JTE.
+- `No such DSL method '<step>'` → falta la librería en `libraries { }` o el nombre del archivo del step no coincide.
+- *In-process Script Approval*: si Jenkins pide aprobar métodos, aprobarlos y relanzar.
+
+## 3. Arquitectura del repo (1 repo, 3 carpetas)
+
+| Carpeta | Qué contiene | Quién lo usa |
+|---|---|---|
+| `jte-pipeline-configurations-automations` | Una carpeta por job con su `pipeline_config.groovy`: **solo valores**. | Todos los steps vía `config` |
+| `jte-automations-pipeline-libraries` | Una carpeta por librería con `library_config.groovy` y `steps/*.groovy` (la **lógica**). | El template |
+| `jte-pipelines-template` | Una carpeta por tipo de pipeline con el template `.groovy` que solo **orquesta**. | Jenkins |
+
+Estructura propuesta (nombres a confirmar con la arquitectura real):
+
+```
+jte-pipeline-configurations-automations/
+└── desplegar-<componente>/pipeline_config.groovy     servidores, rutas, ambientes, artefacto, destinatarios
+
+jte-automations-pipeline-libraries/
+├── despliegue_jboss/
+│   ├── library_config.groovy
+│   ├── resources/                                    scripts shell / jboss-cli (opcional)
+│   └── steps/                                        POR COMPLETAR: obtener artefacto, respaldar, copiar, desplegar, verificar, rollback
+└── notificacion_correo/
+    ├── library_config.groovy
+    └── steps/enviar_correo_despliegue.groovy
+
+jte-pipelines-template/
+└── desplegar-jboss/desplegar_jboss.groovy
+```
+
+Estándar de nombres (igual que los repos hermanos): carpetas de config y template con guiones (`desplegar-jboss`), librerías y
+steps con guion bajo (`despliegue_jboss`, `desplegar_componente`), verbos en infinitivo.
+
+## 4. Convenciones técnicas (heredadas de los repos hermanos)
+
+1. **Config = valores, librería = lógica, template = orquestación.** Nada quemado en los steps (IPs, rutas, usuarios, versiones salen de
+   `config`). Un campo nuevo va en la config **y** en `library_config.groovy`.
+2. **Nunca secretos en el repo** (si es público o se comparte). Usuarios/claves/llaves en **credenciales de Jenkins** (`withCredentials`,
+   `sshagent`) y en la config solo el `credentialsId`. Los secretos se usan como variables de shell (`\$VAR`), nunca interpolados en Groovy.
+3. **Log limpio.** Los `sh` usan `"""#!/bin/sh` pegado a las comillas (sin shebang Jenkins corre `sh -x` y llena el log de trazas).
+   Continuaciones de línea dentro del bloque: `\\`. En GString, `$(...)` y `$VAR` de shell se escriben `\$(...)` y `\$VAR`.
+4. **Log con ✅ / ❌** por paso y servidor, y un **resumen final**.
+5. **Estructura del template:** `timeout(execution)` → `node(jenkins_agent_label)` → `withFolderProperties` → `try/catch/finally`, con
+   `clean_job_workspace()` en el `finally` (viene de una librería global de la instalación). Cada tarea es un `stage`. Todo
+   `catch (Exception e)` va precedido de `catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) { throw e }`.
+6. **CPS de Jenkins:** preferir `for` clásico a `each`/`eachWithIndex`/`collect` con closures que llamen steps; `findAll {}.size()` en vez
+   de `count {}`.
+7. **Fechas con `date` en el nodo** con la zona horaria de la config (`TZ='<zona>' date +'<formato>'`).
+8. **Correo** con `emailext`, `mimeType: 'text/html'`, `to` = destinatarios + `cc:` por cada copia. Se envía **siempre** (éxito o fallo).
+9. **Diferencia con los repos de monitoreo:** en un despliegue un fallo **sí debe detener** los pasos siguientes (no desplegar en el
+   servidor 2 si falló el 1, salvo que se decida lo contrario) y marcar el build en `FAILURE`; aun así el correo se envía desde el `finally`
+   o un hook `@Notify`.
+
+## 5. Despliegue JBoss por SSH — `POR COMPLETAR` / decidir
+
+Patrón SSH ya probado en `jte-automatizaciones` (el nodo tiene la llave, sin `credentialsId`):
+`ssh -o StrictHostKeyChecking=no <user>@<host> "sudo -n -u <runAsUser> <comando>"` (`sudo -n` para que no se cuelgue pidiendo clave).
+Alternativa si la llave está en Jenkins: `sshagent(['<credentialsId>']) { sh 'ssh ...' }`.
+
+Preguntas a responder con la arquitectura del usuario:
+
+1. **Origen del artefacto:** ¿se compila en Jenkins (Maven/Gradle), se descarga de Nexus/Artifactory, o se toma de una ruta? ¿Versión por
+   parámetro del job?
+2. **Modo JBoss:** *standalone* o *domain*; versión de JBoss EAP / WildFly.
+3. **Método de despliegue:**
+   - `jboss-cli.sh --connect --command="deploy /tmp/app.war --force"` (recomendado: reporta error de despliegue), o
+   - copiar a `standalone/deployments/` y vigilar los marcadores `.deployed` / `.failed` / `.isdeploying`, o
+   - el script que ya existe.
+4. **Servidores y ambientes:** lista de hosts por ambiente (dev/qa/prod), usuario SSH, usuario de JBoss (`sudo -u`), rutas.
+5. **Orden y alcance:** ¿todos los servidores en secuencia, uno por uno sacándolo del balanceador, o en paralelo?
+6. **Respaldo y rollback:** respaldar el artefacto actual antes de desplegar; ¿rollback automático si falla la verificación?
+7. **Reinicio:** ¿hace falta reiniciar JBoss o basta el redeploy en caliente?
+8. **Verificación post-despliegue:** `curl` a un health check, revisar `server.log`, estado del deployment en `jboss-cli`.
+9. **Aprobaciones:** ¿`input` manual antes de prod? ¿quién aprueba?
+10. **Disparador:** manual con parámetros (componente, versión, ambiente), webhook de Git, o cadena desde un job de build.
+11. **Repo Git:** `https://github.com/bquintero56/jte` (privado), rama `main`.
+
+## 5.1 Orquestador de webhooks de GitLab (`webhook`)
+
+Un **solo job** en Jenkins recibe el webhook de **todos** los proyectos de GitLab (GitLab Plugin). Del evento saca grupo, repo
+(del path de la URL del proyecto) y rama, arma la ruta del job con `plantillaRutaJob` (`{grupo}/{repo}/{rama}`, o `mapeoRutas` para
+excepciones) y lo lanza con `build`. Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab.
+Archivos: `jte-pipeline-configurations-automations/webhook`, `jte-automations-pipeline-libraries/webhook`
+(`programar_webhook`, `leer_evento_webhook`, `armar_ruta_job`, `ejecutar_job`), `jte-pipelines-template/webhook/webhook.groovy`.
+
+## 6. Cómo probar
+
+- No hay Jenkins en el entorno de desarrollo: revisar la sintaxis con cuidado y explicar cómo probar cada cambio.
+- Probar primero los comandos a mano desde el nodo: `ssh <user>@<host> "sudo -n -u <usuario_jboss> <comando>"`.
+- Primer despliegue real en un ambiente no productivo.
+
+## 7. Cómo trabajar en este repo (instrucciones para Claude Code)
+
+- Mantén la separación config / librería / template y el estándar de nombres.
+- Antes de agregar un campo, añádelo a la config **y** a `library_config.groovy`.
+- No inventes servidores, rutas ni comandos de despliegue: usa los que el usuario documente en las secciones `POR COMPLETAR`.
+- Después de cada cambio: **commit y push** a la rama principal (autor `bquintero <bquintero56@gmail.com>`) cuando el repo tenga remoto,
+  y **decir qué archivos se crearon, modificaron o borraron**, con lo que cambió en cada uno, para que el usuario pueda replicarlos.
