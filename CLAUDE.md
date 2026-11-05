@@ -175,7 +175,7 @@ El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` la
 de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
 Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab.
 Archivos: config `jte-pipeline-configurations-automations/webhook`, librería `jte-automations-pipeline-libraries/webhook`,
-template `jte-pipelines-template/push-orchestrator/push_orchestrator.groovy`.
+template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 
 ## 6. Cómo probar
 
