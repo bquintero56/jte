@@ -1,7 +1,7 @@
 // Lanza el pipeline de la aplicación según la rama que llega en el webhook.
 //   Rama de ambiente (dev, qa, uat, release, main) → <prefijoRuta>/<appcode>/<repo>/<rama>
-//   Cualquier otra rama                             → <prefijoRuta>/<appcode>/<repo>/<jobIntegracion>
-// Al job se le pasa la rama en el parámetro config.parametroRama. No espera a que termine.
+//   Cualquier otra rama                             → <prefijoRuta>/<appcode>/<repo>/integration
+// Al job se le pasa la rama en el parámetro BRANCH. No espera a que termine.
 void call(String branch_name, String repository_name, String appcode) {
     stage('Webhook: disparar pipeline de la aplicación') {
         def job_name = null
@@ -10,7 +10,7 @@ void call(String branch_name, String repository_name, String appcode) {
             job_name = "${config.prefijoRuta}/${appcode}/${repository_name}/${branch_name}"
         }
         else {
-            job_name = "${config.prefijoRuta}/${appcode}/${repository_name}/${config.jobIntegracion}"
+            job_name = "${config.prefijoRuta}/${appcode}/${repository_name}/integration"
         }
 
         try {
@@ -18,9 +18,9 @@ void call(String branch_name, String repository_name, String appcode) {
                 error('❌ No se pudo armar job_name con los datos del webhook.')
             }
 
-            def job_parameters = [string(name: config.parametroRama, value: branch_name)]
+            def job_parameters = [string(name: 'BRANCH', value: branch_name)]
 
-            echo "✅ Lanzando job de la aplicación: ${job_name} (${config.parametroRama}=${branch_name})"
+            echo "✅ Lanzando job de la aplicación: ${job_name} (BRANCH=${branch_name})"
 
             build(job: job_name, wait: false, parameters: job_parameters, propagate: false)
         }
