@@ -169,7 +169,8 @@ Preguntas a responder con la arquitectura del usuario:
 
 Migrado del orquestador que el usuario tenía con **Bitbucket**; se mantiene su lógica lo más posible. Un **solo job** recibe el
 webhook (push) de **todos** los proyectos de GitLab con **Generic Webhook Trigger** (declarado en el template). Variables del JSON:
-`branch_name` (`$.ref` sin `refs/heads/`), `repository_name` y `appcode` (último segmento y grupo de `$.project.path_with_namespace`).
+`branch_name` (`$.ref` sin `refs/heads/`), `repository_name` y `appcode` (último y penúltimo segmento de `$.project.path_with_namespace`).
+En GitLab los repos están en `mexico/<appcode>/<repo>` (grupo `mexico`, subgrupo = appcode).
 El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` lanza `mexico/<appcode>/<repo>/<rama>` si la rama es
 de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
 Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab (grupo de GitLab = appcode).

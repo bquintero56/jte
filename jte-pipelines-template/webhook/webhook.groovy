@@ -1,8 +1,9 @@
 // Orquestador de webhooks de GitLab (Generic Webhook Trigger).
+// En GitLab los repos están en <grupo>/<appcode>/<repo> (ej. mexico/appcode/mi-repo).
 // Del JSON del push de GitLab se toman:
-//   branch_name     ← $.ref                         'refs/heads/dev'         → 'dev'
-//   repository_name ← $.project.path_with_namespace 'appcode/mi-repo'        → 'mi-repo'
-//   appcode         ← $.project.path_with_namespace 'appcode/mi-repo'        → 'appcode'  (grupo de GitLab)
+//   branch_name     ← $.ref                         'refs/heads/dev'          → 'dev'
+//   repository_name ← $.project.path_with_namespace 'mexico/appcode/mi-repo'  → 'mi-repo'  (último segmento)
+//   appcode         ← $.project.path_with_namespace 'mexico/appcode/mi-repo'  → 'appcode'  (penúltimo segmento)
 // Solo dispara con push a ramas (no tags) y no cuando el push borra la rama (after = 000...).
 properties([
     pipelineTriggers([
@@ -10,7 +11,7 @@ properties([
             genericVariables: [
                 [key: 'branch_name',     value: '$.ref',                         regexpFilter: '^refs/heads/'],
                 [key: 'repository_name', value: '$.project.path_with_namespace', regexpFilter: '^.*/'],
-                [key: 'appcode',         value: '$.project.path_with_namespace', regexpFilter: '/[^/]+$'],
+                [key: 'appcode',         value: '$.project.path_with_namespace', regexpFilter: '^.*/(?=[^/]+/[^/]+$)|/[^/]+$'],
                 [key: 'ref',             value: '$.ref'],
                 [key: 'after',           value: '$.after']
             ],
