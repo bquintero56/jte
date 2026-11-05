@@ -1,12 +1,12 @@
-// Lanza el pipeline de la aplicación que corresponde al evento del webhook.
-//   Rama de ambiente (config.ramasAmbiente) → <prefijoRuta>/<appcode>/<repo>/<rama>
-//   Cualquier otra rama                     → <prefijoRuta>/<appcode>/<repo>/<jobIntegracion>
+// Lanza el pipeline de la aplicación según la rama que llega en el webhook.
+//   Rama de ambiente (dev, qa, uat, release, main) → <prefijoRuta>/<appcode>/<repo>/<rama>
+//   Cualquier otra rama                             → <prefijoRuta>/<appcode>/<repo>/<jobIntegracion>
 // Al job se le pasa la rama en el parámetro config.parametroRama. No espera a que termine.
 void call(String branch_name, String repository_name, String appcode) {
     stage('Webhook: disparar pipeline de la aplicación') {
         def job_name = null
 
-        if (branch_name in config.ramasAmbiente) {
+        if (branch_name in ['dev', 'qa', 'uat', 'release', 'main']) {
             job_name = "${config.prefijoRuta}/${appcode}/${repository_name}/${branch_name}"
         }
         else {

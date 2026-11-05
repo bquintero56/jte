@@ -18,7 +18,6 @@ keywords {
 libraries {
     webhook {
         prefijoRuta    = 'mexico'
-        ramasAmbiente  = ['dev', 'qa', 'uat', 'release', 'main']
         jobIntegracion = 'integration'
         parametroRama  = 'BRANCH'
     }
