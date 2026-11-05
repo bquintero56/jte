@@ -2,7 +2,7 @@
 // <prefijoRuta>/<appcode>/<repo>/<rama | integration>.
 jte {
     allow_scm_jenkinsfile = false
-    pipeline_template     = 'webhook/webhook.groovy'
+    pipeline_template     = 'push-orchestrator/push_orchestrator.groovy'
 }
 
 // El template usa execution.time, execution.units, jenkins_agent_label y webhook_token_credential

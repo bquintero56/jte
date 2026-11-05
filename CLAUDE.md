@@ -173,7 +173,9 @@ webhook (push) de **todos** los proyectos de GitLab con **Generic Webhook Trigge
 En GitLab los repos están en `mexico/<appcode>/<repo>` (grupo `mexico`, subgrupo = appcode).
 El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` lanza `mexico/<appcode>/<repo>/<rama>` si la rama es
 de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
-Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab (grupo de GitLab = appcode).
+Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab.
+Archivos: config `jte-pipeline-configurations-automations/webhook`, librería `jte-automations-pipeline-libraries/webhook`,
+template `jte-pipelines-template/push-orchestrator/push_orchestrator.groovy`.
 
 ## 6. Cómo probar
 
