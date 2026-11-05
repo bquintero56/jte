@@ -169,7 +169,7 @@ Preguntas a responder con la arquitectura del usuario:
 
 Migrado del orquestador que el usuario tenía con **Bitbucket**; se mantiene su lógica lo más posible. Un **solo job** recibe el
 webhook (push) de **todos** los proyectos de GitLab con el **GitLab Plugin** (trigger "Build when a change is pushed to GitLab",
-declarado en el template con `properties`, Secret token desde la credencial `webhook_token_credential`; URL `https://<jenkins>/project/<job>`).
+declarado en el template con `properties`, Secret token = password de la credencial *Username with password* `webhook_token_credential`; URL `https://<jenkins>/project/<job>`).
 Variables: `branch_name` = `gitlabSourceBranch`; `repository_name` y `appcode` = último y penúltimo segmento de `gitlabSourceRepoHttpUrl`.
 No se usa Generic Webhook Trigger.
 En GitLab los repos están en `mexico/<appcode>/<repo>` (grupo `mexico`, subgrupo = appcode).

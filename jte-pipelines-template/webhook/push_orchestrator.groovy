@@ -14,7 +14,10 @@ timeout(time: execution.time, unit: execution.units) {
         withFolderProperties {
             try {
                 stage('Webhook: registrar trigger GitLab') {
-                    withCredentials([string(credentialsId: webhook_token_credential, variable: 'GITLAB_WEBHOOK_TOKEN')]) {
+                    // Credencial "Username with password": el password es el Secret token del webhook; el usuario no se usa
+                    withCredentials([usernamePassword(credentialsId   : webhook_token_credential,
+                                                      usernameVariable: 'GITLAB_WEBHOOK_USER',
+                                                      passwordVariable: 'GITLAB_WEBHOOK_TOKEN')]) {
                         properties([
                             pipelineTriggers([
                                 gitlab(

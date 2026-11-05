@@ -12,7 +12,7 @@ keywords {
         units = 'MINUTES'
     }
     jenkins_agent_label      = 'linux-pro'            // AJUSTAR: label del nodo de Jenkins
-    webhook_token_credential = 'gitlab-webhook-token' // AJUSTAR: ID de la credencial "Secret text" con el token del webhook
+    webhook_token_credential = 'gitlab-webhook-token' // AJUSTAR: ID de la credencial "Username with password"; el password = Secret token del webhook
 }
 
 libraries {
