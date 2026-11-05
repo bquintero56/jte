@@ -5,7 +5,7 @@ jte {
     pipeline_template     = 'webhook/push_orchestrator.groovy'
 }
 
-// El template usa execution.time, execution.units, jenkins_agent_label y webhook_token_credential
+// El template usa execution.time, execution.units, jenkins_agent_label y webhook_token_credential (Secret token del trigger de GitLab)
 keywords {
     execution {
         time  = 10

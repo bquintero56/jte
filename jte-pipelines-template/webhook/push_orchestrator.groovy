@@ -1,40 +1,50 @@
-// Orquestador de webhooks de GitLab (Generic Webhook Trigger).
-// En GitLab los repos están en <grupo>/<appcode>/<repo> (ej. mexico/appcode/mi-repo).
-// Del JSON del push de GitLab se toman:
-//   branch_name     ← $.ref                         'refs/heads/dev'          → 'dev'
-//   repository_name ← $.project.path_with_namespace 'mexico/appcode/mi-repo'  → 'mi-repo'  (último segmento)
-//   appcode         ← $.project.path_with_namespace 'mexico/appcode/mi-repo'  → 'appcode'  (penúltimo segmento)
-// Solo dispara con push a ramas (no tags) y no cuando el push borra la rama (after = 000...).
-properties([
-    pipelineTriggers([
-        GenericTrigger(
-            genericVariables: [
-                [key: 'branch_name',     value: '$.ref',                         regexpFilter: '^refs/heads/'],
-                [key: 'repository_name', value: '$.project.path_with_namespace', regexpFilter: '^.*/'],
-                [key: 'appcode',         value: '$.project.path_with_namespace', regexpFilter: '^.*/(?=[^/]+/[^/]+$)|/[^/]+$'],
-                [key: 'ref',             value: '$.ref'],
-                [key: 'after',           value: '$.after']
-            ],
-            tokenCredentialId        : webhook_token_credential,
-            causeString              : 'Webhook GitLab: $appcode/$repository_name @ $branch_name',
-            printContributedVariables: false,
-            printPostContent         : false,
-            regexpFilterText         : '$ref $after',
-            regexpFilterExpression   : '^refs/heads/\\S+ (?!0+$)[0-9a-f]+$'
-        )
-    ])
-])
+// Orquestador de pushes de GitLab (GitLab Plugin: "Build when a change is pushed to GitLab").
+// URL del webhook en GitLab: la que muestra el trigger en el job → https://<jenkins>/project/<ruta-del-job>
+// En GitLab los repos están en <grupo>/<appcode>/<repo> (ej. mexico/appcode/mi-repo). Del evento se toman:
+//   branch_name     ← gitlabSourceBranch                                        'dev'
+//   repository_name ← último segmento de gitlabSourceRepoHttpUrl (sin .git)     'mi-repo'
+//   appcode         ← penúltimo segmento de gitlabSourceRepoHttpUrl             'appcode'
+def branch_name     = ''
+def repository_name = ''
+def appcode         = ''
 
 timeout(time: execution.time, unit: execution.units) {
 
     node(jenkins_agent_label) {
         withFolderProperties {
             try {
-                if (!env.branch_name || !env.repository_name || !env.appcode) {
+                stage('Webhook: registrar trigger GitLab') {
+                    withCredentials([string(credentialsId: webhook_token_credential, variable: 'GITLAB_WEBHOOK_TOKEN')]) {
+                        properties([
+                            pipelineTriggers([
+                                gitlab(
+                                    triggerOnPush                 : true,
+                                    triggerOnMergeRequest         : false,
+                                    triggerOpenMergeRequestOnPush : 'never',
+                                    triggerOnNoteRequest          : false,
+                                    ciSkip                        : true,
+                                    setBuildDescription           : false,
+                                    branchFilterType              : 'All',
+                                    secretToken                   : env.GITLAB_WEBHOOK_TOKEN
+                                )
+                            ])
+                        ])
+                    }
+                }
+
+                // Datos del push (vacíos si el job se ejecutó a mano)
+                def partes = (env.gitlabSourceRepoHttpUrl ?: '').replaceFirst(/\.git$/, '').tokenize('/')
+                branch_name     = env.gitlabSourceBranch ?: env.gitlabBranch ?: ''
+                repository_name = partes.size() >= 4 ? partes[partes.size() - 1] : ''
+                appcode         = partes.size() >= 4 ? partes[partes.size() - 2] : ''
+
+                if (!branch_name || !repository_name || !appcode) {
                     echo '⚠️ Sin datos del webhook (ejecución manual o primera ejecución para registrar el trigger): no se lanza ningún job.'
+                } else if ((env.gitlabAfter ?: '') ==~ /0+/) {
+                    echo "⚠️ Se borró la rama '${branch_name}' en ${appcode}/${repository_name}: no se lanza ningún job."
                 } else {
-                    currentBuild.description = "${env.appcode}/${env.repository_name} @ ${env.branch_name}"
-                    disparar_pipeline_aplicacion(env.branch_name, env.repository_name, env.appcode)
+                    currentBuild.description = "${appcode}/${repository_name} @ ${branch_name}"
+                    disparar_pipeline_aplicacion(branch_name, repository_name, appcode)
                 }
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {

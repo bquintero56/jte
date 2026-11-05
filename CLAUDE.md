@@ -168,8 +168,10 @@ Preguntas a responder con la arquitectura del usuario:
 ## 5.1 Orquestador de webhooks de GitLab (`webhook`)
 
 Migrado del orquestador que el usuario tenía con **Bitbucket**; se mantiene su lógica lo más posible. Un **solo job** recibe el
-webhook (push) de **todos** los proyectos de GitLab con **Generic Webhook Trigger** (declarado en el template). Variables del JSON:
-`branch_name` (`$.ref` sin `refs/heads/`), `repository_name` y `appcode` (último y penúltimo segmento de `$.project.path_with_namespace`).
+webhook (push) de **todos** los proyectos de GitLab con el **GitLab Plugin** (trigger "Build when a change is pushed to GitLab",
+declarado en el template con `properties`, Secret token desde la credencial `webhook_token_credential`; URL `https://<jenkins>/project/<job>`).
+Variables: `branch_name` = `gitlabSourceBranch`; `repository_name` y `appcode` = último y penúltimo segmento de `gitlabSourceRepoHttpUrl`.
+No se usa Generic Webhook Trigger.
 En GitLab los repos están en `mexico/<appcode>/<repo>` (grupo `mexico`, subgrupo = appcode).
 El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` lanza `mexico/<appcode>/<repo>/<rama>` si la rama es
 de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
