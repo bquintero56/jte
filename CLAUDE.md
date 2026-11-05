@@ -163,7 +163,7 @@ Preguntas a responder con la arquitectura del usuario:
 8. **Verificación post-despliegue:** `curl` a un health check, revisar `server.log`, estado del deployment en `jboss-cli`.
 9. **Aprobaciones:** ¿`input` manual antes de prod? ¿quién aprueba?
 10. **Disparador:** manual con parámetros (componente, versión, ambiente), webhook de Git, o cadena desde un job de build.
-11. **Repo Git:** `https://github.com/bquintero56/jte` (privado), rama `main`.
+11. **Repo Git:** `https://github.com/bquintero56/jte` (**público**: nada de secretos, IPs ni hosts internos reales en el repo), rama `main`.
 
 ## 5.1 Orquestador de webhooks de GitLab (`webhook`)
 
