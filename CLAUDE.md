@@ -167,11 +167,12 @@ Preguntas a responder con la arquitectura del usuario:
 
 ## 5.1 Orquestador de webhooks de GitLab (`webhook`)
 
-Un **solo job** en Jenkins recibe el webhook de **todos** los proyectos de GitLab (GitLab Plugin). Del evento saca grupo, repo
-(del path de la URL del proyecto) y rama, arma la ruta del job con `plantillaRutaJob` (`{grupo}/{repo}/{rama}`, o `mapeoRutas` para
-excepciones) y lo lanza con `build`. Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab.
-Archivos: `jte-pipeline-configurations-automations/webhook`, `jte-automations-pipeline-libraries/webhook`
-(`programar_webhook`, `leer_evento_webhook`, `armar_ruta_job`, `ejecutar_job`), `jte-pipelines-template/webhook/webhook.groovy`.
+Migrado del orquestador que el usuario tenía con **Bitbucket**; se mantiene su lógica lo más posible. Un **solo job** recibe el
+webhook (push) de **todos** los proyectos de GitLab con **Generic Webhook Trigger** (declarado en el template). Variables del JSON:
+`branch_name` (`$.ref` sin `refs/heads/`), `repository_name` y `appcode` (último segmento y grupo de `$.project.path_with_namespace`).
+El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` lanza `mexico/<appcode>/<repo>/<rama>` si la rama es
+de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
+Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab (grupo de GitLab = appcode).
 
 ## 6. Cómo probar
 
