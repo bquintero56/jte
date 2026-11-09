@@ -1,22 +1,42 @@
 // Clona el repo de GitLab en el workspace y hace checkout de la rama del evento.
-//   Rama: parámetro BRANCH (lo manda el orquestador del webhook); si no viene, default_branch (ej. dev.short_name).
-//   Repo: <server_url>/<project_path>/<repository_name>.git con la credencial credentials_id.
-// Devuelve un mapa con branch, commit y url.
+// Los jobs en Jenkins tienen la misma estructura que GitLab: el job 'mexico/APP01/Test-Java/dev' clona 'mexico/APP01/Test-Java'.
+//   URL GitLab : propiedad de carpeta GITLAB_URL (global, se define una vez en la carpeta 'mexico' de Jenkins)
+//   Credencial : config.credentials_id o propiedad de carpeta GITLAB_CREDENTIALS_ID
+//   Repo       : config.repository_path o la ruta del job sin el último segmento (la rama / integration)
+//   Rama       : parámetro BRANCH (lo manda el orquestador); si no viene, default_branch (ej. dev.short_name)
+// Requiere estar dentro de withFolderProperties. Devuelve [branch, commit, url].
 Map call(String default_branch) {
-    def branch = (params.BRANCH ?: env.BRANCH ?: default_branch ?: '').trim()
-    def url    = "${config.server_url.replaceFirst(/\/+$/, '')}/${config.project_path.trim()}/${config.repository_name.trim()}.git"
+    def server      = (env.GITLAB_URL ?: '').trim().replaceFirst(/\/+$/, '')
+    def credentials = (config.credentials_id ?: env.GITLAB_CREDENTIALS_ID ?: '').trim()
+    def branch      = (params.BRANCH ?: env.BRANCH ?: default_branch ?: '').trim()
 
+    def repo_path = (config.repository_path ?: '').trim()
+    if (!repo_path) {
+        def job = env.JOB_NAME ?: ''
+        repo_path = job.contains('/') ? job.substring(0, job.lastIndexOf('/')) : ''
+    }
+
+    if (!server) {
+        error('❌ Falta la propiedad de carpeta GITLAB_URL (ej. https://gitlab.empresa.com) en la carpeta de Jenkins.')
+    }
+    if (!credentials) {
+        error('❌ Falta la propiedad de carpeta GITLAB_CREDENTIALS_ID (o credentials_id en la config).')
+    }
+    if (!repo_path) {
+        error("❌ No se pudo obtener la ruta del repo desde el job '${env.JOB_NAME}'. Indicar repository_path en la config.")
+    }
     if (!branch) {
         error('❌ No se indicó la rama a clonar (parámetro BRANCH vacío y sin rama por defecto).')
     }
 
+    def url = "${server}/${repo_path}.git"
     echo "Clonando ${url} rama ${branch}"
 
     try {
         def scm_vars = checkout([
             $class           : 'GitSCM',
             branches         : [[name: "refs/heads/${branch}"]],
-            userRemoteConfigs: [[url: url, credentialsId: config.credentials_id]],
+            userRemoteConfigs: [[url: url, credentialsId: credentials]],
             extensions       : [
                 [$class: 'CloneOption', noTags: true, shallow: false, timeout: 10],
                 [$class: 'CleanBeforeCheckout'],
@@ -25,8 +45,8 @@ Map call(String default_branch) {
         ])
 
         def commit = scm_vars.GIT_COMMIT ?: ''
-        echo "✅ Código descargado: ${config.project_path}/${config.repository_name} @ ${branch} (commit ${commit.length() > 8 ? commit.substring(0, 8) : commit})"
-        return [branch: branch, commit: scm_vars.GIT_COMMIT, url: url]
+        echo "✅ Código descargado: ${repo_path} @ ${branch} (commit ${commit.length() > 8 ? commit.substring(0, 8) : commit})"
+        return [branch: branch, commit: commit, url: url]
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
         throw e

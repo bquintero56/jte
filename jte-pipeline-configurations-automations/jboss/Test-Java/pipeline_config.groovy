@@ -29,11 +29,7 @@ MAVEN_OPTS=-Dmaven.wagon.http.ssl.insecure=true -Dmaven.resolver.transport=wagon
 }
 
 libraries {
-    gitlab {
-        server_url      = 'https://gitlab.empresa.com'   // AJUSTAR: URL base de GitLab
-        project_path    = 'mexico/APPCODE'               // AJUSTAR: grupo/appcode del repo en GitLab
-        repository_name = 'Test-Java'
-        credentials_id  = 'gitlab-checkout'              // AJUSTAR: credencial Username with password (usuario + access token read_repository)
-    }
+    // URL y credencial: propiedades de carpeta GITLAB_URL / GITLAB_CREDENTIALS_ID. Repo: ruta del job sin la rama.
+    gitlab { }
     // Se agregan al sumar sus etapas: maven, sonarqube, jboss
 }
