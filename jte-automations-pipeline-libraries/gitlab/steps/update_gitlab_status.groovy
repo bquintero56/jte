@@ -2,10 +2,13 @@
 // Usa la conexión GitLab declarada en properties() del template. No hace nada si todavía no se clonó el código.
 // Nunca hace fallar el build: si GitLab no responde solo deja un aviso en el log.
 void call(String name, String state) {
-    if (!env.GITLAB_STATUS_COMMIT) {
+    def commit = env.GITLAB_STATUS_COMMIT ?: ''
+    if (!commit) {
+        echo "GitLab estado: '${name}' → ${state} omitido (todavía no hay commit clonado)"
         return
     }
     try {
+        echo "GitLab estado: '${name}' → ${state} (commit ${commit.length() > 8 ? commit.substring(0, 8) : commit})"
         updateGitlabCommitStatus(name: name, state: state)
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
