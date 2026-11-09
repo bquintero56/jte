@@ -1,35 +1,30 @@
 // CI de componentes JBoss — job 'uat': rama uat → ambiente de UAT
 // Flujo: checkout (GitLab) → build Maven → carpeta temporal en el servidor → copia del artefacto
 // → dispara el job de CD (despliegue) → borra la carpeta temporal.
-// Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit.
+// Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit (conexión: gitlab_connection()).
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
+properties([
+    buildDiscarder(logRotator(numToKeepStr: log_rotator)),
+    disableConcurrentBuilds(),
+    durabilityHint('PERFORMANCE_OPTIMIZED'),
+    [
+        $class                    : 'EnvInjectJobProperty',
+        info                      : [
+            loadFilesFromMaster: false,
+            propertiesContent  : job_environments
+        ],
+        keepBuildVariables        : true,
+        keepJenkinsSystemVariables: true,
+        on                        : true
+    ],
+    gitlab_connection()      // conexión GitLab para el estado por etapa
+])
 
 timeout(time: execution.time, unit: execution.units) {
 
     node(jenkins_agent_label) {
         withFolderProperties {
-            // Propiedades del job (dentro de withFolderProperties para leer GITLAB_CONNECTION de la carpeta)
-            def job_properties = [
-                buildDiscarder(logRotator(numToKeepStr: log_rotator)),
-                disableConcurrentBuilds(),
-                durabilityHint('PERFORMANCE_OPTIMIZED'),
-                [
-                    $class                    : 'EnvInjectJobProperty',
-                    info                      : [
-                        loadFilesFromMaster: false,
-                        propertiesContent  : job_environments
-                    ],
-                    keepBuildVariables        : true,
-                    keepJenkinsSystemVariables: true,
-                    on                        : true
-                ]
-            ]
-            if (env.GITLAB_CONNECTION) {
-                job_properties.add(gitLabConnection(gitLabConnection: env.GITLAB_CONNECTION))   // estado por etapa en GitLab
-            }
-            properties(job_properties)
-
             try {
                 gitlab_stage('GitLab: checkout') {
                     checkout_code(uat.short_name)
