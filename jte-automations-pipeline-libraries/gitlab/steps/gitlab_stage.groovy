@@ -1,12 +1,12 @@
-// Igual que stage(name) { ... }, pero además informa el estado de la etapa en GitLab (junto al commit y en los merge requests).
+// Igual que stage(name) { ... }, pero además informa el estado de la etapa en GitLab (Build → Pipelines, junto al commit y en los MR).
 //   running al empezar → success / failed / canceled al terminar.
-//   Si la etapa deja el build en UNSTABLE (ej. checkstyle con errores) se informa 'failed' en GitLab: GitLab no tiene estado "warning".
+//   Si la etapa deja el build en UNSTABLE (amarillo en Jenkins, ej. checkstyle con errores) se informa 'success' en GitLab:
+//   GitLab no tiene estado "warning" y un 'failed' dejaría todo el pipeline en failed. La advertencia queda en Jenkins (log del stage).
 // Requiere que checkout_code() se haya ejecutado (antes de eso no hay commit al que informar: la etapa corre igual, sin estado).
 // El estado nunca hace fallar el build: si GitLab no responde solo queda un aviso en el log.
 void call(String name, Closure body) {
     stage(name) {
         update_gitlab_status(name, 'running')
-        def result_before = currentBuild.currentResult
 
         try {
             body()
@@ -20,7 +20,6 @@ void call(String name, Closure body) {
             throw e
         }
 
-        def turned_unstable = (currentBuild.currentResult == 'UNSTABLE' && result_before != 'UNSTABLE')
-        update_gitlab_status(name, turned_unstable ? 'failed' : 'success')
+        update_gitlab_status(name, 'success')
     }
 }
