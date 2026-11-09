@@ -2,6 +2,8 @@ import jte.maven.lifecycle.Checkstyle
 
 // Valida el estilo del código con Maven (mvn checkstyle:check) dentro de withMaven.
 // Solo corre si config.linter_scan = true; si no, marca el build UNSTABLE con un aviso.
+// Suppressions (mixto): resources/checkstyle/<component_name>/checkstyle-suppressions.xml si el micro tiene uno propio;
+// si no, el común resources/checkstyle/checkstyle-suppressions.xml. Se escribe en el workspace antes de correr checkstyle.
 //   JDK / Maven: config.jdk_version / config.mvn_version, o las propiedades de carpeta
 //                F_PIPELINE_JDK_TOOL_VERSION / F_PIPELINE_MAVEN_TOOL_VERSION
 void call() {
@@ -14,8 +16,10 @@ void call() {
             def mvn_opts    = [artifactsPublisher(disabled: true), jacocoPublisher(disabled: true), junitPublisher(disabled: true)]
 
             if (config.linter_scan == true) {
+                def suppressions_file = write_suppressions()
+
                 withMaven(globalMavenSettingsConfig: config.settings_config, jdk: jdk_version, maven: mvn_version, options: mvn_opts, traceability: false) {
-                    checkstyle.scanCode()
+                    checkstyle.scanCode(suppressions_file)
                 }
                 echo '✅ Checkstyle sin errores'
             }
@@ -30,4 +34,31 @@ void call() {
     catch (Exception e) {
         error("${e.message}")
     }
+}
+
+// Escribe en el workspace el suppressions del micro (si existe) o el común. Devuelve la ruta del archivo.
+String write_suppressions() {
+    def file    = 'checkstyle-suppressions.xml'
+    def micro   = ''
+    def content = null
+    def origin  = ''
+
+    try { micro = component_name } catch (MissingPropertyException e) { micro = '' }
+
+    if (micro) {
+        try {
+            content = resource("checkstyle/${micro}/checkstyle-suppressions.xml")
+            origin  = "propio de ${micro}"
+        } catch (Exception e) {
+            content = null
+        }
+    }
+    if (content == null) {
+        content = resource('checkstyle/checkstyle-suppressions.xml')
+        origin  = 'común'
+    }
+
+    writeFile(file: file, text: content)
+    echo "Checkstyle suppressions: ${origin} → ${file}"
+    return file
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC "-//Puppy Crawl//DTD Suppressions 1.0//EN"
+        "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
+
+<!-- Suppressions COMUNES para todos los micros.
+     Un micro con excepciones propias: resources/checkstyle/<component_name>/checkstyle-suppressions.xml (reemplaza a este). -->
+<suppressions>
+    <!-- No se exige Javadoc -->
+    <suppress checks="Javadoc" files="."/>
+    <!-- Clase principal (*Application.java, solo tiene el main): no es una clase utilitaria -->
+    <suppress checks="HideUtilityClassConstructor" files=".*Application\.java"/>
+</suppressions>

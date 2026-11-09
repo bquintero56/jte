@@ -191,6 +191,10 @@ from SCM*), no con un Base Directory + `pipeline_config.groovy`.
 Librería `gitlab` (sin campos; `gitlab { }` vacío en la config): `checkout_code(rama_por_defecto)` clona `<GITLAB_URL>/<JOB_NAME sin el
 último segmento>.git` en la rama `BRANCH` con la credencial `GITLAB_CREDENTIALS_ID` (propiedades de la carpeta `mexico` en Jenkins).
 
+Checkstyle suppressions (mixto): `maven/resources/checkstyle/checkstyle-suppressions.xml` común; un micro con excepciones propias usa
+`maven/resources/checkstyle/<component_name>/checkstyle-suppressions.xml`. `check_code_styles` lo escribe en el workspace y pasa
+`-Dcheckstyle.suppressions.location`. Reemplaza al `file_list` de la librería bitbucket (el `sonar-project.properties` se verá con Sonar).
+
 **Pendiente:** estado por etapa en GitLab (`gitLabConnection` + `gitlabBuilds` + `gitlabCommitStatus` por stage, después del checkout).
 Se probó una versión con un solo estado y se revirtió: falta que al usuario le den el token `api` (rol Developer) para la conexión GitLab.
 
