@@ -184,7 +184,7 @@ template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 Un template por job/rama en `jte-pipelines-template/jboss-integration/`: `default_integration` (job `integration`, cualquier otra rama),
 `dev_`, `qa_`, `uat_`, `main_integration`. Flujo: checkout → build Maven → carpeta temporal en el servidor → copia del artefacto →
 dispara el job de CD (`jboss-deployment`, por crear) y lo espera → borra la carpeta temporal. Se agregan las etapas una por una y el
-usuario prueba cada una antes de pasar a la siguiente (probado: checkout en default, dev, qa y uat).
+usuario prueba cada una antes de pasar a la siguiente (probado: checkout en default, dev, qa y uat; build Maven).
 Configs por micro: archivos sueltos `jte-pipeline-configurations-automations/jboss/<micro>/<rama>-integration-config.groovy`
 (default, dev, qa, uat; main pendiente). Cada job de Jenkins apunta a su archivo con la ruta de config del job (*Pipeline Configuration
 from SCM*), no con un Base Directory + `pipeline_config.groovy`.
