@@ -27,8 +27,9 @@ timeout(time: execution.time, unit: execution.units) {
                     checkout_code('')
                 }
 
-                // Validaciones: según run_unit_test de la config (si están en false el build queda UNSTABLE)
-                compile_code()                       // trae su propio stage: Maven: compile code
+                stage('Maven: compile code') {
+                    compile_code()
+                }
 
                 stage('Maven: unit test') {
                     run_unit_test()
