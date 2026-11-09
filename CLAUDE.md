@@ -203,6 +203,8 @@ Propiedades del análisis centralizadas (los desarrolladores no las controlan): 
 general (o `.../<component_name>/sonar-project.properties`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
 no se definen; `sonar.*` en pom.xml, `.mvn/maven.config` / `.mvn/jvm.config` o un `sonar-project.properties` en el repo (lo ignora el
 scanner de Maven) → aviso y UNSTABLE.
+Cobertura: la mide el pipeline (clase `Test`: `jacoco:prepare-agent test` a `target/jte-jacoco/jacoco.exec`, borra `target/site/jacoco` y
+genera `jacoco:report` solo desde ese exec). El jacoco-maven-plugin del micro no influye; si no se puede medir, Sonar muestra 0%.
 
 Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →
 success/failed/canceled (UNSTABLE → success en GitLab: no tiene "warning" y un failed tumbaría el pipeline; la advertencia queda en Jenkins). Conexión: `gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')`
