@@ -28,6 +28,17 @@ timeout(time: execution.time, unit: execution.units) {
                     checkout_code(prod.short_name)
                 }
 
+                // Validaciones: según run_unit_test / linter_scan de la config (si están en false el build queda UNSTABLE)
+                compile_code()                       // trae su propio stage: Maven: compile code
+
+                stage('Maven: unit test') {
+                    run_unit_test()
+                }
+
+                stage('Maven: checkstyle') {
+                    check_code_styles()
+                }
+
                 stage('Maven: build binary') {
                     build_component()
                 }

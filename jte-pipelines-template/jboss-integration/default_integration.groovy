@@ -1,6 +1,5 @@
 // CI de componentes JBoss — job 'integration': cualquier rama que no sea dev, qa, uat, release o main (feature/*, bugfix/*...). La rama llega en BRANCH.
-// Flujo: checkout (GitLab) → build Maven → carpeta temporal en el servidor → copia del artefacto
-// → dispara el job de CD (despliegue) → borra la carpeta temporal.
+// Flujo: checkout (GitLab) → compile → unit test → checkstyle → build. Solo valida: no despliega.
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
 properties([
@@ -28,15 +27,22 @@ timeout(time: execution.time, unit: execution.units) {
                     checkout_code('')
                 }
 
+                // Validaciones: según run_unit_test / linter_scan de la config (si están en false el build queda UNSTABLE)
+                compile_code()                       // trae su propio stage: Maven: compile code
+
+                stage('Maven: unit test') {
+                    run_unit_test()
+                }
+
+                stage('Maven: checkstyle') {
+                    check_code_styles()
+                }
+
                 stage('Maven: build binary') {
                     build_component()
                 }
 
-                // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   JBoss: create temporary folder → create_temporary_folder()
-                //   JBoss: copy artifact           → copy_artifact_on_server()
-                //   Trigger parametrized job       → trigger_jboss_deploy_job(POR DEFINIR: ¿despliega en algún ambiente?)
-                //   JBoss: remove temporary folder (en el finally, para que se borre siempre)
+                // Pipeline de validación: solo comprueba que el código compila, pasa las pruebas y el checkstyle. No despliega.
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 throw e     // conserva el estado ABORTED
