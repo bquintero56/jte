@@ -195,8 +195,10 @@ Checkstyle suppressions (mixto): `maven/resources/checkstyle/checkstyle-suppress
 `maven/resources/checkstyle/<component_name>/checkstyle-suppressions.xml`. `check_code_styles` lo escribe en el workspace y pasa
 `-Dcheckstyle.suppressions.location`. Reemplaza al `file_list` de la librería bitbucket (el `sonar-project.properties` se verá con Sonar).
 
-**Pendiente:** estado por etapa en GitLab (`gitLabConnection` + `gitlabBuilds` + `gitlabCommitStatus` por stage, después del checkout).
-Se probó una versión con un solo estado y se revirtió: falta que al usuario le den el token `api` (rol Developer) para la conexión GitLab.
+Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →
+success/failed/canceled (UNSTABLE → failed: GitLab no tiene "warning"). Conexión = propiedad de carpeta `GITLAB_CONNECTION` (nombre de la
+GitLab connection de Jenkins, credencial GitLab API token `api`); sin ella el pipeline corre igual sin informar. Las `properties` del job
+van dentro de `withFolderProperties` para poder leerla.
 
 ## 6. Cómo probar
 

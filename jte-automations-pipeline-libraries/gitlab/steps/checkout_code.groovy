@@ -41,6 +41,7 @@ Map call(String default_branch) {
         ])
 
         def commit = scm_vars.GIT_COMMIT ?: ''
+        env.GITLAB_STATUS_COMMIT = commit        // habilita update_gitlab_status / gitlab_stage (estado en GitLab)
         echo "✅ Código descargado: ${repo_path} @ ${branch} (commit ${commit.length() > 8 ? commit.substring(0, 8) : commit})"
         return [branch: branch, commit: commit, url: url]
     }

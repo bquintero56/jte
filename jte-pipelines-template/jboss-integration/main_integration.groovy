@@ -1,46 +1,53 @@
 // CI de componentes JBoss — job 'main': rama main → ambiente productivo
 // Flujo: checkout (GitLab) → build Maven → carpeta temporal en el servidor → copia del artefacto
 // → dispara el job de CD (despliegue) → borra la carpeta temporal.
+// Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit.
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
-properties([
-    buildDiscarder(logRotator(numToKeepStr: log_rotator)),
-    disableConcurrentBuilds(),
-    durabilityHint('PERFORMANCE_OPTIMIZED'),
-    [
-        $class                    : 'EnvInjectJobProperty',
-        info                      : [
-            loadFilesFromMaster: false,
-            propertiesContent  : job_environments
-        ],
-        keepBuildVariables        : true,
-        keepJenkinsSystemVariables: true,
-        on                        : true
-    ]
-])
 
 timeout(time: execution.time, unit: execution.units) {
 
     node(jenkins_agent_label) {
         withFolderProperties {
+            // Propiedades del job (dentro de withFolderProperties para leer GITLAB_CONNECTION de la carpeta)
+            def job_properties = [
+                buildDiscarder(logRotator(numToKeepStr: log_rotator)),
+                disableConcurrentBuilds(),
+                durabilityHint('PERFORMANCE_OPTIMIZED'),
+                [
+                    $class                    : 'EnvInjectJobProperty',
+                    info                      : [
+                        loadFilesFromMaster: false,
+                        propertiesContent  : job_environments
+                    ],
+                    keepBuildVariables        : true,
+                    keepJenkinsSystemVariables: true,
+                    on                        : true
+                ]
+            ]
+            if (env.GITLAB_CONNECTION) {
+                job_properties.add(gitLabConnection(gitLabConnection: env.GITLAB_CONNECTION))   // estado por etapa en GitLab
+            }
+            properties(job_properties)
+
             try {
-                stage('GitLab: checkout') {
+                gitlab_stage('GitLab: checkout') {
                     checkout_code(prod.short_name)
                 }
 
-                stage('Maven: compile code') {
+                gitlab_stage('Maven: compile code') {
                     compile_code()
                 }
 
-                stage('Maven: unit test') {
+                gitlab_stage('Maven: unit test') {
                     run_unit_test()
                 }
 
-                stage('Maven: checkstyle') {
+                gitlab_stage('Maven: checkstyle') {
                     check_code_styles()
                 }
 
-                stage('Maven: build binary') {
+                gitlab_stage('Maven: build binary') {
                     build_component()
                 }
 
