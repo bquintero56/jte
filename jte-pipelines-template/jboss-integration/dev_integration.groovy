@@ -1,5 +1,7 @@
-// CI de componentes JBoss: checkout (GitLab) → build Maven → carpeta temporal en el servidor → copia del artefacto
+// CI de componentes JBoss — job 'dev': rama dev → ambiente de desarrollo
+// Flujo: checkout (GitLab) → build Maven → carpeta temporal en el servidor → copia del artefacto
 // → dispara el job de CD (despliegue) → borra la carpeta temporal.
+// Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
@@ -27,10 +29,10 @@ timeout(time: execution.time, unit: execution.units) {
                 }
 
                 // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   Maven: build binary          → build_component()
+                //   Maven: build binary            → build_component()
                 //   JBoss: create temporary folder → create_temporary_folder()
-                //   JBoss: copy artifact         → copy_artifact_on_server()
-                //   Trigger parametrized job     → trigger_jboss_deploy_job(dev.deployment_project, ...)
+                //   JBoss: copy artifact           → copy_artifact_on_server()
+                //   Trigger parametrized job       → trigger_jboss_deploy_job(dev.deployment_project, ...)
                 //   JBoss: remove temporary folder (en el finally, para que se borre siempre)
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
