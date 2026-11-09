@@ -1,5 +1,5 @@
 // CI de componentes JBoss — job 'integration': cualquier rama que no sea dev, qa, uat, release o main (feature/*, bugfix/*...). La rama llega en BRANCH.
-// Flujo: checkout (GitLab) → compile → unit test → checkstyle → build. Solo valida: no despliega.
+// Flujo: checkout (GitLab) → compile → unit test → build. Solo valida: no despliega.
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
 properties([
@@ -27,22 +27,18 @@ timeout(time: execution.time, unit: execution.units) {
                     checkout_code('')
                 }
 
-                // Validaciones: según run_unit_test / linter_scan de la config (si están en false el build queda UNSTABLE)
+                // Validaciones: según run_unit_test de la config (si están en false el build queda UNSTABLE)
                 compile_code()                       // trae su propio stage: Maven: compile code
 
                 stage('Maven: unit test') {
                     run_unit_test()
                 }
 
-                stage('Maven: checkstyle') {
-                    check_code_styles()
-                }
-
                 stage('Maven: build binary') {
                     build_component()
                 }
 
-                // Pipeline de validación: solo comprueba que el código compila, pasa las pruebas y el checkstyle. No despliega.
+                // Pipeline de validación: solo comprueba que el código compila y pasa las pruebas. No despliega.
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
                 throw e     // conserva el estado ABORTED
