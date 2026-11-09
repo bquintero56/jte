@@ -196,9 +196,12 @@ Checkstyle suppressions (mixto): `maven/resources/checkstyle/checkstyle-suppress
 `-Dcheckstyle.suppressions.location`. Reemplaza al `file_list` de la librería bitbucket (el `sonar-project.properties` se verá con Sonar).
 
 SonarQube (Community 9.9.8, sin ramas): librería `sonarqube` (`scan_code_quality`, `check_quality_gate`), solo en `default_integration`, después
-de los unit tests y antes del build. Scanner de Maven (`sonar-maven-plugin:3.11.0.3922`, sin `sonar-project.properties`) dentro de
+de los unit tests y antes del build. Scanner de Maven (`sonar-maven-plugin:3.11.0.3922`) dentro de
 `withSonarQubeEnv('Sonar_server_SCAN_SERVER')`; project key = `component_name` (= nombre del repo). Quality Gate con `waitForQualityGate`
 vía webhook global de SonarQube a `https://<jenkins>/sonarqube-webhook/`; `enforce_quality_gates` decide FAILURE o UNSTABLE.
+Propiedades del análisis centralizadas (los desarrolladores no las controlan): `sonarqube/resources/sonarqube/sonar-project.properties`
+general (o `.../<component_name>/sonar-project.properties`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
+no se definen; `sonar.*` en el pom.xml → aviso y UNSTABLE.
 
 Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →
 success/failed/canceled (UNSTABLE → success en GitLab: no tiene "warning" y un failed tumbaría el pipeline; la advertencia queda en Jenkins). Conexión: `gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')`
