@@ -1,29 +1,25 @@
 // Clona el repo de GitLab en el workspace y hace checkout de la rama del evento.
 // Los jobs en Jenkins tienen la misma estructura que GitLab: el job 'mexico/APP01/Test-Java/dev' clona 'mexico/APP01/Test-Java'.
 //   URL GitLab : propiedad de carpeta GITLAB_URL (global, se define una vez en la carpeta 'mexico' de Jenkins)
-//   Credencial : config.credentials_id o propiedad de carpeta GITLAB_CREDENTIALS_ID
-//   Repo       : config.repository_path o la ruta del job sin el último segmento (la rama / integration)
+//   Credencial : propiedad de carpeta GITLAB_CREDENTIALS_ID (global)
+//   Repo       : la ruta del job sin el último segmento (la rama / integration)
 //   Rama       : parámetro BRANCH (lo manda el orquestador); si no viene, default_branch (ej. dev.short_name)
 // Requiere estar dentro de withFolderProperties. Devuelve [branch, commit, url].
 Map call(String default_branch) {
     def server      = (env.GITLAB_URL ?: '').trim().replaceFirst(/\/+$/, '')
-    def credentials = (config.credentials_id ?: env.GITLAB_CREDENTIALS_ID ?: '').trim()
+    def credentials = (env.GITLAB_CREDENTIALS_ID ?: '').trim()
     def branch      = (params.BRANCH ?: env.BRANCH ?: default_branch ?: '').trim()
-
-    def repo_path = (config.repository_path ?: '').trim()
-    if (!repo_path) {
-        def job = env.JOB_NAME ?: ''
-        repo_path = job.contains('/') ? job.substring(0, job.lastIndexOf('/')) : ''
-    }
+    def job         = env.JOB_NAME ?: ''
+    def repo_path   = job.contains('/') ? job.substring(0, job.lastIndexOf('/')) : ''
 
     if (!server) {
         error('❌ Falta la propiedad de carpeta GITLAB_URL (ej. https://gitlab.empresa.com) en la carpeta de Jenkins.')
     }
     if (!credentials) {
-        error('❌ Falta la propiedad de carpeta GITLAB_CREDENTIALS_ID (o credentials_id en la config).')
+        error('❌ Falta la propiedad de carpeta GITLAB_CREDENTIALS_ID en la carpeta de Jenkins.')
     }
     if (!repo_path) {
-        error("❌ No se pudo obtener la ruta del repo desde el job '${env.JOB_NAME}'. Indicar repository_path en la config.")
+        error("❌ No se pudo obtener la ruta del repo desde el job '${job}' (se espera <grupo>/<appcode>/<repo>/<rama>).")
     }
     if (!branch) {
         error('❌ No se indicó la rama a clonar (parámetro BRANCH vacío y sin rama por defecto).')
