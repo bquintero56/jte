@@ -1,7 +1,7 @@
 // CI de componentes JBoss — job 'uat': rama uat → ambiente de UAT
 // Flujo: checkout (GitLab) → build Maven → carpeta temporal en el servidor → copia del artefacto
 // → dispara el job de CD (despliegue) → borra la carpeta temporal.
-// Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit (conexión: gitlab_connection()).
+// Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit (conexión GitLab en properties).
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
 properties([
@@ -18,7 +18,7 @@ properties([
         keepJenkinsSystemVariables: true,
         on                        : true
     ],
-    gitlab_connection()      // conexión GitLab para el estado por etapa
+    gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')   // conexión GitLab (System) para el estado por etapa
 ])
 
 timeout(time: execution.time, unit: execution.units) {
