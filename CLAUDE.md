@@ -201,7 +201,8 @@ de los unit tests y antes del build. Scanner de Maven (`sonar-maven-plugin:3.11.
 vía webhook global de SonarQube a `https://<jenkins>/sonarqube-webhook/`; `enforce_quality_gates` decide FAILURE o UNSTABLE.
 Propiedades del análisis centralizadas (los desarrolladores no las controlan): `sonarqube/resources/sonarqube/sonar-project.properties`
 general (o `.../<component_name>/sonar-project.properties`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
-no se definen; `sonar.*` en el pom.xml → aviso y UNSTABLE.
+no se definen; `sonar.*` en pom.xml, `.mvn/maven.config` / `.mvn/jvm.config` o un `sonar-project.properties` en el repo (lo ignora el
+scanner de Maven) → aviso y UNSTABLE.
 
 Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →
 success/failed/canceled (UNSTABLE → success en GitLab: no tiene "warning" y un failed tumbaría el pipeline; la advertencia queda en Jenkins). Conexión: `gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')`

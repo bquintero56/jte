@@ -97,14 +97,23 @@ String build_sonar_args(String project_key) {
     return args.join(' ')
 }
 
-// Avisa (UNSTABLE) si algún pom.xml del micro declara propiedades sonar.*: el pipeline las anula, pero el intento queda a la vista.
+// Avisa (UNSTABLE) si el repo del micro intenta configurar SonarQube por su cuenta. Las propiedades que excluyen código
+// se anulan igual desde el pipeline; el aviso deja el intento a la vista. Revisa:
+//   - pom.xml (cualquier módulo) con propiedades sonar.*
+//   - .mvn/maven.config y .mvn/jvm.config con sonar.* (Maven los lee solo en cada ejecución)
+//   - sonar-project.properties en el repo (el scanner de Maven lo ignora: no tiene efecto)
 void check_pom_sonar_properties() {
     def found = sh(script: '''#!/bin/sh
-find . -name pom.xml -not -path "*/target/*" -exec grep -n "sonar\\." {} + 2>/dev/null || true''', returnStdout: true).trim()
+find . -name pom.xml -not -path "*/target/*" -exec grep -n "sonar\\." {} + 2>/dev/null
+for f in .mvn/maven.config .mvn/jvm.config; do
+    [ -f "$f" ] && grep -n "sonar\\." "$f" 2>/dev/null | sed "s#^#$f:#"
+done
+find . -name sonar-project.properties -not -path "*/target/*" 2>/dev/null | sed "s#\\$# (ignorado por el scanner de Maven)#"
+true''', returnStdout: true).trim()
 
     if (found) {
-        echo "⚠️ El pom.xml declara propiedades de SonarQube. Las que excluyen código se anulan desde el pipeline:\n${found}"
-        unstable('⚠️ pom.xml con propiedades sonar.* (la configuración de SonarQube la controla el pipeline).')
+        echo "⚠️ El repo intenta configurar SonarQube (las propiedades de exclusión se anulan desde el pipeline):\n${found}"
+        unstable('⚠️ Configuración de SonarQube en el repo del micro (la controla el pipeline).')
     }
 }
 
