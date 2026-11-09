@@ -32,5 +32,8 @@ libraries {
         settings_config = 'GLOBAL_MAVEN_SETTINGS'     // ID del Managed file (Config File Provider) con el settings.xml
         // jdk_version / mvn_version: opcionales; si no van, salen de F_PIPELINE_JDK_TOOL_VERSION / F_PIPELINE_MAVEN_TOOL_VERSION
     }
-    // Se agregan al sumar sus etapas: sonarqube, jboss
+    sonarqube {
+        enforce_quality_gates = true          // false: si no pasa el Quality Gate queda UNSTABLE y sigue
+    }
+    // Se agrega al sumar sus etapas: jboss
 }
