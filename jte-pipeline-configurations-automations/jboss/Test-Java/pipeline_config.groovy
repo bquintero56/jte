@@ -9,7 +9,7 @@ application_environments {
 
 jte {
     allow_scm_jenkinsfile = false
-    pipeline_template     = 'jboss/dev_integration.groovy'
+    pipeline_template     = 'jboss-integration/jboss_integration.groovy'
 }
 
 keywords {
