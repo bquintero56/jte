@@ -185,6 +185,8 @@ Un template por job/rama en `jte-pipelines-template/jboss-integration/`: `defaul
 `dev_`, `qa_`, `uat_`, `main_integration`. Flujo: checkout → build Maven → carpeta temporal en el servidor → copia del artefacto →
 dispara el job de CD (`jboss-deployment`, por crear) y lo espera → borra la carpeta temporal. Se agregan las etapas una por una y el
 usuario prueba cada una antes de pasar a la siguiente (probado: checkout).
+Configs por micro: `jte-pipeline-configurations-automations/jboss/<micro>/<rama>_integration/pipeline_config.groovy` (default, dev, qa,
+uat; main pendiente). El archivo siempre se llama `pipeline_config.groovy` (JTE lo exige); el Base Directory del job apunta a esa carpeta.
 Librería `gitlab` (sin campos; `gitlab { }` vacío en la config): `checkout_code(rama_por_defecto)` clona `<GITLAB_URL>/<JOB_NAME sin el
 último segmento>.git` en la rama `BRANCH` con la credencial `GITLAB_CREDENTIALS_ID` (propiedades de la carpeta `mexico` en Jenkins).
 
