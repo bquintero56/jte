@@ -28,8 +28,11 @@ timeout(time: execution.time, unit: execution.units) {
                     checkout_code(uat.short_name)
                 }
 
+                stage('Maven: build binary') {
+                    build_component()
+                }
+
                 // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   Maven: build binary            → build_component()
                 //   JBoss: create temporary folder → create_temporary_folder()
                 //   JBoss: copy artifact           → copy_artifact_on_server()
                 //   Trigger parametrized job       → trigger_jboss_deploy_job(uat.deployment_project, ...)

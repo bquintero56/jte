@@ -26,5 +26,11 @@ MAVEN_OPTS=-Dmaven.wagon.http.ssl.insecure=true -Dmaven.resolver.transport=wagon
 libraries {
     // URL y credencial: propiedades de carpeta GITLAB_URL / GITLAB_CREDENTIALS_ID. Repo: ruta del job sin la rama.
     gitlab { }
-    // Se agregan al sumar sus etapas: maven, sonarqube, jboss
+    maven {
+        run_unit_test   = true
+        linter_scan     = true
+        settings_config = 'GLOBAL_MAVEN_SETTINGS'     // ID del Managed file (Config File Provider) con el settings.xml
+        // jdk_version / mvn_version: opcionales; si no van, salen de F_PIPELINE_JDK_TOOL_VERSION / F_PIPELINE_MAVEN_TOOL_VERSION
+    }
+    // Se agregan al sumar sus etapas: sonarqube, jboss
 }
