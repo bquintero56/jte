@@ -179,6 +179,18 @@ Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en
 Archivos: config `jte-pipeline-configurations-automations/webhook`, librería `jte-automations-pipeline-libraries/webhook`,
 template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 
+## 5.2 CI JBoss (`jboss-integration`)
+
+Un template por job/rama en `jte-pipelines-template/jboss-integration/`: `default_integration` (job `integration`, cualquier otra rama),
+`dev_`, `qa_`, `uat_`, `main_integration`. Flujo: checkout → build Maven → carpeta temporal en el servidor → copia del artefacto →
+dispara el job de CD (`jboss-deployment`, por crear) y lo espera → borra la carpeta temporal. Se agregan las etapas una por una y el
+usuario prueba cada una antes de pasar a la siguiente (probado: checkout).
+Librería `gitlab` (sin campos; `gitlab { }` vacío en la config): `checkout_code(rama_por_defecto)` clona `<GITLAB_URL>/<JOB_NAME sin el
+último segmento>.git` en la rama `BRANCH` con la credencial `GITLAB_CREDENTIALS_ID` (propiedades de la carpeta `mexico` en Jenkins).
+
+**Pendiente:** estado por etapa en GitLab (`gitLabConnection` + `gitlabBuilds` + `gitlabCommitStatus` por stage, después del checkout).
+Se probó una versión con un solo estado y se revirtió: falta que al usuario le den el token `api` (rol Developer) para la conexión GitLab.
+
 ## 6. Cómo probar
 
 - No hay Jenkins en el entorno de desarrollo: revisar la sintaxis con cuidado y explicar cómo probar cada cambio.
