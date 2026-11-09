@@ -1,7 +1,9 @@
 import jte.maven.lifecycle.Checkstyle
+import jte.maven.exceptions.MavenPhaseExecutionException
 
 // Valida el estilo del código con Maven (mvn checkstyle:check) dentro de withMaven.
 // Solo corre si config.linter_scan = true; si no, marca el build UNSTABLE con un aviso.
+// Si checkstyle encuentra errores de estilo NO detiene el pipeline: marca el stage y el build en UNSTABLE (amarillo) y sigue.
 // Suppressions (mixto): resources/checkstyle/<component_name>/checkstyle-suppressions.xml si el micro tiene uno propio;
 // si no, el común resources/checkstyle/checkstyle-suppressions.xml. Se escribe en el workspace antes de correr checkstyle.
 //   JDK / Maven: config.jdk_version / config.mvn_version, o las propiedades de carpeta
@@ -18,10 +20,15 @@ void call() {
             if (config.linter_scan == true) {
                 def suppressions_file = write_suppressions()
 
-                withMaven(globalMavenSettingsConfig: config.settings_config, jdk: jdk_version, maven: mvn_version, options: mvn_opts, traceability: false) {
-                    checkstyle.scanCode(suppressions_file)
+                try {
+                    withMaven(globalMavenSettingsConfig: config.settings_config, jdk: jdk_version, maven: mvn_version, options: mvn_opts, traceability: false) {
+                        checkstyle.scanCode(suppressions_file)
+                    }
+                    echo '✅ Checkstyle sin errores'
                 }
-                echo '✅ Checkstyle sin errores'
+                catch (MavenPhaseExecutionException e) {
+                    unstable('⚠️ Checkstyle encontró errores de estilo (ver el log de este stage). El pipeline continúa.')
+                }
             }
             else {
                 unstable('[WARN]: skip linter execution caused by project configuration.')
