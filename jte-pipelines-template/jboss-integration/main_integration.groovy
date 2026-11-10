@@ -46,8 +46,11 @@ timeout(time: execution.time, unit: execution.units) {
                     build_component()
                 }
 
+                gitlab_stage('JBoss: create temporary folder') {
+                    create_temporary_folder()
+                }
+
                 // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   JBoss: create temporary folder → create_temporary_folder()
                 //   JBoss: copy artifact           → copy_artifact_on_server()
                 //   Trigger parametrized job       → trigger_jboss_deploy_job(prod.deployment_project, ...)
                 //   JBoss: remove temporary folder (en el finally, para que se borre siempre)
