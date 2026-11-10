@@ -9,7 +9,7 @@ String call() {
     }
 
     if (!base || !base.startsWith('/')) {
-        error("❌ jboss.path no es válido: '${config.path}'. Debe ser una ruta absoluta (ej. /opt).")
+        error("❌ jboss_ci.path no es válido: '${config.path}'. Debe ser una ruta absoluta (ej. /opt).")
     }
     if (!component || component.contains('/') || component.contains('..') || component.contains(' ')) {
         error("❌ component_name no es válido para la carpeta temporal: '${component}'.")

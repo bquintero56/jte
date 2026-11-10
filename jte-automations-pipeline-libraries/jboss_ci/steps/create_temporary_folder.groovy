@@ -7,7 +7,7 @@ void call() {
     // config.host como lista, aunque venga un solo host como String
     def host_list = config.host instanceof String ? [config.host] : config.host
     if (!host_list) {
-        error('❌ Falta jboss.host en la config: lista de servidores JBoss del ambiente.')
+        error('❌ Falta jboss_ci.host en la config: lista de servidores JBoss del ambiente.')
     }
 
     echo "Preparando la carpeta temporal ${component_full_path} en: ${host_list}"
