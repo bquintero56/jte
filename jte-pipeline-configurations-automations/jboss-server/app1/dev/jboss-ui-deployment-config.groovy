@@ -19,6 +19,6 @@ keywords {
 libraries {
     jboss_cd_standalone {                                             // JBoss standalone (si es domain: jboss_cd_domain + server_groups)
         host_deploy = 'jboss-ui-dev.ejemplo.local'                  // AJUSTAR: host del servidor JBoss donde se despliega (uno)
-        dry_run     = false                                           // false = despliega de verdad (true = SIMULACIÓN: solo muestra el comando)
+        // dry_run = true                                             // opcional: SIMULACIÓN (no despliega, solo muestra el comando)
     }
 }
