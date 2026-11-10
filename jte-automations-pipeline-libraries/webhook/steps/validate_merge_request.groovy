@@ -2,8 +2,8 @@
 // No usa estados de commit: el commit de origen lo comparten todos los MR y los pipelines de la rama, así que un estado
 // "failed" se pisa con el siguiente pipeline y no bloquea el merge. Cerrar el MR sí lo impide.
 // Flujo estándar, sin excepciones (no se permiten hotfix):
-//   dev  ← cualquier rama (es la rama inicial del flujo)
-//   qa   ← solo dev
+//   dev  ← cualquier rama (sin regla)
+//   qa   ← cualquier rama (sin regla, por el momento)
 //   uat  ← solo qa
 //   main ← solo uat
 //   otro destino → sin regla: ✅
@@ -11,7 +11,7 @@
 //   (config.api_token_credential, default 'gitlab-api-close-merge-request'). Datos del MR: gitlabMergeRequestTargetProjectId / gitlabMergeRequestIid.
 // Librería webhook. Lo llama el pipeline merge_request_validator (job aparte del orquestador de pushes) en cada MR abierto o actualizado.
 void call(String source_branch, String target_branch) {
-    def promotion_rules = ['qa': 'dev', 'uat': 'qa', 'main': 'uat']   // destino: único origen permitido (dev no tiene regla)
+    def promotion_rules = ['uat': 'qa', 'main': 'uat']   // destino: único origen permitido (dev y qa no tienen regla por el momento)
 
     def source = String.valueOf(source_branch ?: '').trim()
     def target = String.valueOf(target_branch ?: '').trim()
@@ -20,7 +20,7 @@ void call(String source_branch, String target_branch) {
         println("[INFO]: Merge Request !${env.gitlabMergeRequestIid}: '${source}' → '${target}'")
 
         if (!promotion_rules.containsKey(target)) {
-            println("[INFO]: ✅ MR permitido: ${target == 'dev' ? "'dev' es la rama inicial: acepta cualquier rama" : "destino '${target}' sin regla de promoción"}")
+            println("[INFO]: ✅ MR permitido: '${target}' no tiene regla de promoción (acepta cualquier rama)")
             return
         }
         if (source == promotion_rules[target]) {
