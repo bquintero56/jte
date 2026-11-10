@@ -4,10 +4,10 @@
 //   Comando   : deploy <archivo> --name=<COMPONENT_NAME>.<packaging> --runtime-name=<COMPONENT_NAME>.<packaging> --force
 //     --name         : nombre FIJO del deployment (aunque el archivo traiga versión): info, undeploy y verify siempre lo encuentran
 //     --runtime-name : nombre con que corre; define el context root (URL) si el .war no lo trae, así la URL no cambia
-//     --force        : si ya existe lo REEMPLAZA (full-replace-deployment, lo recomendado por JBoss); si no, lo crea
+//     --force        : respaldo: si aún existiera un deployment con ese nombre lo reemplaza (el template ya hace undeploy antes)
 //   jboss-cli : <jboss_home>/bin/jboss-cli.sh (default /opt/jboss-eap), credencial config.cli_credentials_id (default 'jboss-cli')
 //   SSH       : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
-// Con --force no hace falta undeploy previo para actualizar.
+// El template ejecuta undeploy_component antes si el componente ya existía.
 // Devuelve true si desplegó y false si fue simulación (dry_run): el template solo verifica si devolvió true.
 Boolean call(String component_name, String component_packaging) {
     def host           = String.valueOf(config.host_deploy ?: '').trim()

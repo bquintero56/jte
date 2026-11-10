@@ -19,6 +19,7 @@ keywords {
 libraries {
     jboss_cd_standalone {                                             // JBoss standalone (si es domain: jboss_cd_domain + server_groups)
         host_deploy = 'jboss-ui-dev.ejemplo.local'                  // AJUSTAR: host del servidor JBoss donde se despliega (uno)
+        cli_credentials_id = 'jboss-cli-credentials-noprod-mex'           // credencial Username with password del usuario de administración de JBoss (no productivo)
         // dry_run = true                                             // opcional: SIMULACIÓN (no despliega, solo muestra el comando)
     }
 }
