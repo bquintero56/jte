@@ -211,7 +211,9 @@ Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en defau
 `<JBOSS_TEMP_PATH>/<component_name>` en cada `jboss_ci.host` por `ssh -o BatchMode=yes <usuario>@<host>` (llave del nodo; usuario = propiedad de carpeta
 `JBOSS_SSH_USER`, o `jboss_ci.user` como excepción); carpeta base = propiedad de carpeta `JBOSS_TEMP_PATH` (o `jboss_ci.path`
 como excepción), la misma que leerá el CD; `jboss_temporary_path()` valida la ruta antes del `rm -rf`. `copy_artifact_on_server` copia
-el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. Pendientes: `trigger_jboss_deploy_job`, `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
+el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. `trigger_jboss_deploy_job(<amb>.deployment_project,
+parámetros, wait)` lanza cada job de CD (COMPONENT_NAME, COMPONENT_PACKAGING) con `propagate: false` y revisa el resultado: SUCCESS sigue,
+UNSTABLE → amarillo y sigue, otro → detiene. Pendiente: `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
 El job de CD (uno por servidor/aplicación, ej. `pais/jboss/app1/dev-deployment`) tendrá su propia config del SERVIDOR y la librería
 `jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
 

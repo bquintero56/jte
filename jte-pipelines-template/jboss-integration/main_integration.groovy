@@ -21,6 +21,13 @@ properties([
     gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')   // conexión GitLab (System) para el estado por etapa
 ])
 
+// Parámetros para el job de CD (despliegue) y si se espera a que termine
+def wait_job_execution = true
+def jboss_pipeline_parameters = [
+    string(name: 'COMPONENT_NAME',      value: component_name),
+    string(name: 'COMPONENT_PACKAGING', value: component_packaging)
+]
+
 timeout(time: execution.time, unit: execution.units) {
 
     node(jenkins_agent_label) {
@@ -54,8 +61,11 @@ timeout(time: execution.time, unit: execution.units) {
                     copy_artifact_on_server()
                 }
 
+                gitlab_stage('JBoss: trigger deploy job') {
+                    trigger_jboss_deploy_job(prod.deployment_project, jboss_pipeline_parameters, wait_job_execution)
+                }
+
                 // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   Trigger parametrized job       → trigger_jboss_deploy_job(prod.deployment_project, ...)
                 //   JBoss: remove temporary folder (en el finally, para que se borre siempre)
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
