@@ -3,7 +3,7 @@ application_environments {
     dev {
         long_name          = 'Development environment'
         short_name         = 'dev'
-        deployment_project = ['pais/jboss/app1/dev-deployment', 'pais/jboss/app2/dev-deployment']   // jobs de CD a disparar
+        deployment_project = ['pais/jboss/app1/dev/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss/<app>/<ambiente>/<servidor>-deployment)
     }
 }
 

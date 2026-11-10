@@ -1,5 +1,5 @@
 // CD de componentes JBoss: lo lanza el CI del micro (trigger_jboss_deploy_job) con COMPONENT_NAME y COMPONENT_PACKAGING.
-// Un job por servidor/aplicación (ej. pais/jboss/app1/dev-deployment), con la config del SERVIDOR.
+// Un job por servidor JBoss (ej. pais/jboss/app1/dev/jboss-ui-deployment), con la config del SERVIDOR.
 // PRUEBA: por ahora deploy_component() solo muestra los datos recibidos.
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
