@@ -56,14 +56,27 @@ void close_invalid_merge_request(String reason) {
     withCredentials([string(credentialsId: credential_id, variable: 'GITLAB_API_TOKEN')]) {
         withEnv(["MR_API=${api}", "MR_COMMENT=${comment}"]) {
             // Token como variable del SHELL (\$...): no se interpola en Groovy ni queda en el log
+            // Si GitLab responde >= 400, muestra el código HTTP y su mensaje (sin el token) para diagnosticar
             def status_code = sh(script: '''#!/bin/sh
-set -e
-curl -sS -f -o /dev/null -X POST -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --data-urlencode "body=$MR_COMMENT" "$MR_API/notes"
-curl -sS -f -o /dev/null -X PUT  -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --data "state_event=close" "$MR_API"
+call_api() {
+    accion="$1"; shift
+    http=$(curl -sS -o /tmp/jte_mr_api_$$.json -w "%{http_code}" "$@")
+    if [ "$http" -ge 400 ] 2>/dev/null || [ -z "$http" ]; then
+        echo "[ERROR]: GitLab respondió HTTP $http al $accion:"
+        cat /tmp/jte_mr_api_$$.json 2>/dev/null; echo
+        rm -f /tmp/jte_mr_api_$$.json
+        return 1
+    fi
+    echo "[INFO]: GitLab respondió HTTP $http al $accion"
+    rm -f /tmp/jte_mr_api_$$.json
+}
+call_api "comentar el MR" -X POST -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --data-urlencode "body=$MR_COMMENT" "$MR_API/notes" || exit 1
+call_api "cerrar el MR"   -X PUT  -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --data "state_event=close" "$MR_API" || exit 1
 ''', returnStatus: true)
 
             if (status_code != 0) {
-                error("[ERROR]: ❌ No se pudo comentar/cerrar el MR !${mr_iid} con la API de GitLab (código ${status_code}). Revisar el token '${credential_id}' (permiso api, rol Developer o superior) y GITLAB_URL.")
+                error("[ERROR]: ❌ No se pudo comentar/cerrar el MR !${mr_iid} con la API de GitLab (ver el código HTTP y el mensaje arriba). " +
+                      "401 = token inválido o vencido; 403 = token sin scope 'api' o su usuario sin rol Developer en el proyecto. Credencial: '${credential_id}'.")
             }
         }
     }
