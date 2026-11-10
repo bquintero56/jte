@@ -49,6 +49,8 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
     // 2. Deploy con jboss-cli (ruta absoluta del archivo en el servidor)
     println("[INFO]: Desplegando ${artifact} en JBoss domain (${host}, server groups: ${config.server_groups})")
 
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
+
     def status_code = 0
     withCredentials([usernamePassword(credentialsId: credentials_id,
                                       usernameVariable: 'JBOSS_CLI_USER',

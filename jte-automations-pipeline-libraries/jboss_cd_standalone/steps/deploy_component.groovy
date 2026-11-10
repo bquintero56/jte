@@ -62,6 +62,8 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
 
     println("[INFO]: Desplegando ${artifact} como '${deployment_name}' en JBoss standalone (${host}); si ya existe se reemplaza (--force)")
 
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
+
     def status_code = 0
     withCredentials([usernamePassword(credentialsId: credentials_id,
                                       usernameVariable: 'JBOSS_CLI_USER',

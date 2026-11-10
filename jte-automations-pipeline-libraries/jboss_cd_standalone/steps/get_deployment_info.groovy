@@ -34,6 +34,9 @@ Map call(String component_name) {
 
     println("[INFO]: Consultando el estado de '${component_name}' en JBoss standalone (${host})")
 
+    def cli_command = "deployment-info --name=${component_name}*"
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
+
     def output = ''
     withCredentials([usernamePassword(credentialsId: credentials_id,
                                       usernameVariable: 'JBOSS_CLI_USER',
@@ -41,7 +44,7 @@ Map call(String component_name) {
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log.
         // 'echo p' acepta el certificado del servidor si jboss-cli lo pregunta. "|| true": la salida se analiza abajo.
         output = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='deployment-info --name=${component_name}*'" 2>&1 || true""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1 || true""",
                     returnStdout: true).trim()
     }
 

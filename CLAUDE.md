@@ -221,7 +221,8 @@ CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros
 (`host_deploy` String obligatorio: un host por config; `user` opcional; la carpeta del artefacto es
 `<JBOSS_TEMP_PATH>/<COMPONENT_NAME>`, la misma del CI, sin `path` en la config). `get_deployment_info(componente)` consulta por SSH
 `<jboss_home>/bin/jboss-cli.sh --connect --command="deployment-info --name=<componente>*"` (jboss_home default `/opt/jboss-eap`, credencial
-`cli_credentials_id` default `jboss-cli`, clave como variable del shell) y devuelve [exists, name, enabled, status, running] (columnas NAME RUNTIME-NAME PERSISTENT ENABLED STATUS; `running` =
+`cli_credentials_id` default `jboss-cli`, clave como variable del shell); cada step imprime `[INFO]: Comando enviado: ...` con el comando exacto
+(usuario y clave como ***) y devuelve [exists, name, enabled, status, running] (columnas NAME RUNTIME-NAME PERSISTENT ENABLED STATUS; `running` =
 ENABLED true y STATUS OK; `true false STOPPED` = existe pero detenido); error de conexión/autenticación → ❌. Es una etapa visible del template del CD
 (`JBoss: deployment info`); flujo del CD: deployment info → `deploy_component(nombre, empaquetado)` →
 verify (`get_deployment_info` otra vez). Verify exige `running`. `jboss_cd_standalone.dry_run = true` → SIMULACIÓN: deploy solo muestra el
