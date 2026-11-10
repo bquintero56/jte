@@ -218,11 +218,11 @@ UNSTABLE → amarillo y sigue, otro → detiene. Pendiente: `remove_temporary_fo
 CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librería `jboss_cd`
 (`host_deploy` String obligatorio: un host por config; `user` opcional; la carpeta del artefacto es
 `<JBOSS_TEMP_PATH>/<COMPONENT_NAME>`, la misma del CI, sin `path` en la config) y una config por servidor JBoss:
-`jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss/<app>/<ambiente>/<servidor>-deployment`
+`jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss-server/<app>/<ambiente>/<servidor>-deployment`
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,
 get_deployment_info, publish_artifact_to_nexus). Hosts/usuario reales solo en Jenkins.
-El job de CD (uno por servidor/aplicación, ej. `pais/jboss/app1/dev-deployment`) tendrá su propia config del SERVIDOR y la librería
+El job de CD (uno por servidor JBoss, ej. `pais/jboss-server/app1/dev/jboss-ui-deployment`) tendrá su propia config del SERVIDOR y la librería
 `jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
 
 Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →

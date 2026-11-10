@@ -1,5 +1,5 @@
 // Ejecuta el (los) job(s) de CD que despliegan el componente en JBoss, uno detrás de otro.
-//   project_names      : rutas de los jobs de CD (ej. dev.deployment_project = ['pais/jboss/app1/dev-deployment', ...])
+//   project_names      : rutas de los jobs de CD (ej. dev.deployment_project = ['pais/jboss-server/app1/dev/jboss-ui-deployment', ...])
 //   custom_parameters  : parámetros para el job de CD (ej. [string(name: 'COMPONENT_NAME', value: ...), ...])
 //   wait_job_execution : true = espera a que termine cada job y revisa su resultado; false = solo lo lanza
 // Con wait = true:

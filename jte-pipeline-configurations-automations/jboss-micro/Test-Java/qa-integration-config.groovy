@@ -3,7 +3,7 @@ application_environments {
     qa {
         long_name          = 'QA environment'
         short_name         = 'qa'
-        deployment_project = ['pais/jboss/app1/qa/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss/<app>/<ambiente>/<servidor>-deployment)
+        deployment_project = ['pais/jboss-server/app1/qa/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss-server/<app>/<ambiente>/<servidor>-deployment)
     }
 }
 

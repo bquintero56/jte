@@ -3,7 +3,7 @@ application_environments {
     uat {
         long_name          = 'UAT environment'
         short_name         = 'uat'
-        deployment_project = ['pais/jboss/app1/uat/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss/<app>/<ambiente>/<servidor>-deployment)
+        deployment_project = ['pais/jboss-server/app1/uat/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss-server/<app>/<ambiente>/<servidor>-deployment)
     }
 }
 
