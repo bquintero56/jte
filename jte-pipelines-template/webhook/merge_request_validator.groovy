@@ -39,7 +39,7 @@ timeout(time: execution.time, unit: execution.units) {
                     def partes = (env.gitlabTargetRepoHttpUrl ?: env.gitlabSourceRepoHttpUrl ?: '').replaceFirst(/\.git$/, '').tokenize('/')
                     def repo   = partes.size() >= 2 ? "${partes[partes.size() - 2]}/${partes[partes.size() - 1]}" : '?'
                     currentBuild.description = "MR ${repo}: ${env.gitlabSourceBranch} → ${env.gitlabTargetBranch}"
-                    validar_merge_request(env.gitlabSourceBranch, env.gitlabTargetBranch)
+                    validate_merge_request(env.gitlabSourceBranch, env.gitlabTargetBranch)
                 }
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {

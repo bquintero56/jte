@@ -15,7 +15,7 @@ keywords {
 }
 
 libraries {
-    // Misma librería que el orquestador de pushes: aquí se usa su step validar_merge_request.
+    // Misma librería que el orquestador de pushes: aquí se usa su step validate_merge_request.
     // country es obligatorio en la librería (lo usa el orquestador); el validador no lo usa.
     webhook {
         country = 'mexico'
