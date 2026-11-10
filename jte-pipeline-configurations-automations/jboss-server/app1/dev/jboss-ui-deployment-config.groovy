@@ -19,5 +19,6 @@ keywords {
 libraries {
     jboss_cd {
         host_deploy = 'jboss-ui-dev.ejemplo.local'                  // AJUSTAR: host del servidor JBoss donde se despliega (uno)
+        jboss_mode  = 'standalone'                                    // 'standalone' o 'domain' (en domain agregar server_groups = ['...'])
     }
 }

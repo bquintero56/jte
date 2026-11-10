@@ -1,6 +1,6 @@
 // CD de componentes JBoss: lo lanza el CI del micro (trigger_jboss_deploy_job) con COMPONENT_NAME y COMPONENT_PACKAGING.
 // Un job por servidor JBoss (ej. pais/jboss-server/app1/dev/jboss-ui-deployment), con la config del SERVIDOR.
-// PRUEBA: por ahora deploy_component() solo muestra los datos recibidos.
+// Flujo: deployment info → undeploy (solo si ya existe; PENDIENTE) → deploy → verify. Standalone o domain según jboss_cd.jboss_mode.
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
     disableConcurrentBuilds(),
@@ -24,8 +24,23 @@ timeout(time: execution.time, unit: execution.units) {
                     component_deployed = get_deployment_info(params.COMPONENT_NAME)
                 }
 
+                stage('JBoss: undeploy component') {
+                    if (component_deployed) {
+                        // PENDIENTE: undeploy_component(params.COMPONENT_NAME). Mientras tanto se detiene: JBoss rechazaría el deploy por duplicado.
+                        error("[ERROR]: ❌ '${params.COMPONENT_NAME}' ya está desplegado y el undeploy todavía no está implementado.")
+                    }
+                    println("[INFO]: '${params.COMPONENT_NAME}' no está desplegado: no hace falta undeploy")
+                }
+
                 stage('JBoss: deploy component') {
-                    deploy_component(component_deployed)
+                    deploy_component(params.COMPONENT_NAME, params.COMPONENT_PACKAGING)
+                }
+
+                stage('JBoss: verify deployment') {
+                    if (!get_deployment_info(params.COMPONENT_NAME)) {
+                        error("[ERROR]: ❌ '${params.COMPONENT_NAME}' no quedó desplegado en JBoss")
+                    }
+                    println("[INFO]: ✅ Despliegue verificado: '${params.COMPONENT_NAME}'")
                 }
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
