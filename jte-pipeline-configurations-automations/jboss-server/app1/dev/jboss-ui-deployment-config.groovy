@@ -19,6 +19,5 @@ keywords {
 libraries {
     jboss_cd {
         host_deploy = 'jboss-ui-dev.ejemplo.local'                  // AJUSTAR: host del servidor JBoss donde se despliega (uno)
-        path        = '/opt/jboss'                                        // AJUSTAR: ruta de JBoss en el servidor
     }
 }

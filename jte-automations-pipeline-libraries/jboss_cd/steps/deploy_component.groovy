@@ -16,9 +16,8 @@ void call() {
     println("[INFO]: Lanzado por         : ${currentBuild.getBuildCauses().collect { it.shortDescription }.join(', ')}")
     println("[INFO]: COMPONENT_NAME      : ${component_name}")
     println("[INFO]: COMPONENT_PACKAGING : ${component_packaging}")
-    println("[INFO]: Artefacto esperado  : ${temp_base ?: '<JBOSS_TEMP_PATH sin definir>'}/${component_name}/*.${component_packaging}")
+    println("[INFO]: Carpeta del artefacto (misma del CI): ${temp_base ?: '<JBOSS_TEMP_PATH sin definir>'}/${component_name}/*.${component_packaging}")
     println("[INFO]: Host (deploy)       : ${config.host_deploy ?: '<host_deploy sin definir>'}")
-    println("[INFO]: Ruta JBoss          : ${config.path ?: '<path sin definir>'}")
     println("[INFO]: Usuario SSH         : ${ssh_user ?: '<JBOSS_SSH_USER sin definir>'}")
     println("[INFO]: ✅ Job de CD recibió los datos correctamente")
 }

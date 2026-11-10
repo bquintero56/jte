@@ -216,7 +216,8 @@ el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. 
 parámetros, wait)` lanza cada job de CD (COMPONENT_NAME, COMPONENT_PACKAGING) con `propagate: false` y revisa el resultado: SUCCESS sigue,
 UNSTABLE → amarillo y sigue, otro → detiene. Pendiente: `remove_temporary_folder` (en el finally).
 CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librería `jboss_cd`
-(`host_deploy` String: un host por config, `path`, `user` opcional) y una config por servidor JBoss:
+(`host_deploy` String obligatorio: un host por config; `user` opcional; la carpeta del artefacto es
+`<JBOSS_TEMP_PATH>/<COMPONENT_NAME>`, la misma del CI, sin `path` en la config) y una config por servidor JBoss:
 `jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss/<app>/<ambiente>/<servidor>-deployment`
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,
