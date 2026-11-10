@@ -7,10 +7,10 @@
 fields {
     required {
         path = String                           // carpeta base donde se crea la temporal: <path>/<component_name>
+        host = List                             // servidores JBoss del ambiente, siempre como lista: ['host1'] o ['host1', 'host2']
     }
     optional {
         user                        = String    // solo si este micro usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
-        host                        = List      // servidores JBoss del ambiente (también acepta un String con un solo host)
         component_packaging         = String    // war, ear, jar...
         component_name              = String    // nombre del componente (carpeta temporal y artefacto)
         artifact_workspace_location = String    // carpeta del artefacto en el workspace (default 'target')
