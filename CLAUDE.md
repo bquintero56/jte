@@ -184,7 +184,7 @@ template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 Promoción de ramas (sin hotfix, sin excepciones): rama de trabajo → dev → qa → uat → main. Un job APARTE del orquestador, `merge_request_validator`
 (template `webhook/merge_request_validator.groovy`, config `webhook/merge-request-validator/pipeline_config.groovy`, step `validate_merge_request` de la librería `webhook`),
 escucha solo **Merge Requests** (abiertos/actualizados) y `validate_merge_request(origen, destino)` (dev ← cualquier rama, qa ← solo dev, uat ← solo qa, main ← solo uat):
-si el MR NO es válido lo COMENTA y lo CIERRA con la API de GitLab (`<GITLAB_URL>/api/v4`, token Secret text `gitlab-api-token`, campo
+si el MR NO es válido lo COMENTA y lo CIERRA con la API de GitLab (`<GITLAB_URL>/api/v4`, token Secret text `gitlab-api-close-merge-request`, campo
 opcional `api_token_credential`). NO se usan estados de commit para bloquear: el commit de origen lo comparten los MR y el pipeline de la
 rama, y un re-run del CI de dev dejó el MR en "passed" (probado). En cada repo (GitLab EE 19.3.6): ramas `dev/qa/uat/main` protegidas
 (push: No one). Pendiente capa 2: validar en qa/uat/main antes de desplegar

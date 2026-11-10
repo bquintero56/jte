@@ -8,7 +8,7 @@
 //   main ← solo uat
 //   otro destino → sin regla: ✅
 // API de GitLab: <GITLAB_URL>/api/v4 (propiedad de carpeta) con un token de permiso api guardado en Jenkins como "Secret text"
-//   (config.api_token_credential, default 'gitlab-api-token'). Datos del MR: gitlabMergeRequestTargetProjectId / gitlabMergeRequestIid.
+//   (config.api_token_credential, default 'gitlab-api-close-merge-request'). Datos del MR: gitlabMergeRequestTargetProjectId / gitlabMergeRequestIid.
 // Librería webhook. Lo llama el pipeline merge_request_validator (job aparte del orquestador de pushes) en cada MR abierto o actualizado.
 void call(String source_branch, String target_branch) {
     def promotion_rules = ['qa': 'dev', 'uat': 'qa', 'main': 'uat']   // destino: único origen permitido (dev no tiene regla)
@@ -40,7 +40,7 @@ void close_invalid_merge_request(String reason) {
     def server        = String.valueOf(env.GITLAB_URL ?: '').trim().replaceFirst(/\/+$/, '')
     def project_id    = String.valueOf(env.gitlabMergeRequestTargetProjectId ?: '').trim()
     def mr_iid        = String.valueOf(env.gitlabMergeRequestIid ?: '').trim()
-    def credential_id = String.valueOf(config.api_token_credential ?: 'gitlab-api-token').trim()
+    def credential_id = String.valueOf(config.api_token_credential ?: 'gitlab-api-close-merge-request').trim()
 
     if (!server || !project_id || !mr_iid) {
         error("[ERROR]: ❌ No se puede cerrar el MR: falta GITLAB_URL (propiedad de carpeta) o los datos del MR del webhook (proyecto '${project_id}', MR '${mr_iid}').")

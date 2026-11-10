@@ -4,6 +4,6 @@ fields {
     }
     optional {
         api_token_credential = String     // validate_merge_request: credencial "Secret text" con token de GitLab (permiso api) para
-                                          // comentar y cerrar MR inválidos (default 'gitlab-api-token')
+                                          // comentar y cerrar MR inválidos (default 'gitlab-api-close-merge-request')
     }
 }
