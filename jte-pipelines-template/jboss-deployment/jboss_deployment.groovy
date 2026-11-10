@@ -10,6 +10,9 @@ properties([
     ])
 ])
 
+// Resultado de get_deployment_info: true si el componente ya está desplegado en este JBoss
+def component_deployed = false
+
 timeout(time: execution.time, unit: execution.units) {
 
     node(jenkins_agent_label) {
@@ -17,8 +20,12 @@ timeout(time: execution.time, unit: execution.units) {
             try {
                 currentBuild.description = "${params.COMPONENT_NAME ?: '-'}.${params.COMPONENT_PACKAGING ?: '-'}"
 
+                stage('JBoss: deployment info') {
+                    component_deployed = get_deployment_info(params.COMPONENT_NAME)
+                }
+
                 stage('JBoss: deploy component') {
-                    deploy_component()
+                    deploy_component(component_deployed)
                 }
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {

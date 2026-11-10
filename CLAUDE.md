@@ -221,7 +221,8 @@ CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros
 (`host_deploy` String obligatorio: un host por config; `user` opcional; la carpeta del artefacto es
 `<JBOSS_TEMP_PATH>/<COMPONENT_NAME>`, la misma del CI, sin `path` en la config). `get_deployment_info(componente)` consulta por SSH
 `<jboss_home>/bin/jboss-cli.sh --connect --command="deployment-info --name=<componente>*"` (jboss_home default `/opt/jboss-eap`, credencial
-`cli_credentials_id` default `jboss-cli`, clave como variable del shell) y devuelve true/false; error de conexión/autenticación → ❌ y una config por servidor JBoss:
+`cli_credentials_id` default `jboss-cli`, clave como variable del shell) y devuelve true/false; error de conexión/autenticación → ❌. Es una etapa visible del template del CD
+(`JBoss: deployment info`); su resultado se pasa a `deploy_component(component_deployed)` y una config por servidor JBoss:
 `jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss-server/<app>/<ambiente>/<servidor>-deployment`
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,

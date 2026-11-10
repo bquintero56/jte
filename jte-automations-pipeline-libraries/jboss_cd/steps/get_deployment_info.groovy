@@ -17,7 +17,10 @@ Boolean call(String component_name) {
     if (!ssh_user) {
         error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd.user en la config).')
     }
-    if (!component_name?.trim() || component_name.contains("'") || component_name.contains(' ')) {
+    if (!component_name?.trim()) {
+        error('[ERROR]: ❌ Falta el parámetro COMPONENT_NAME (este job lo lanza el CI del micro con COMPONENT_NAME y COMPONENT_PACKAGING).')
+    }
+    if (component_name.contains("'") || component_name.contains(' ')) {
         error("[ERROR]: ❌ Nombre de componente no válido para jboss-cli: '${component_name}'.")
     }
 

@@ -1,6 +1,7 @@
 // PRUEBA: por ahora solo muestra lo que recibió el job de CD (parámetros del CI y datos del servidor) para validar el flujo CI → CD.
 // Aquí irá el despliegue real en JBoss.
-void call() {
+// component_deployed: resultado de get_deployment_info (etapa "JBoss: deployment info" del template).
+void call(Boolean component_deployed) {
     def component_name      = String.valueOf(params.COMPONENT_NAME ?: '').trim()
     def component_packaging = String.valueOf(params.COMPONENT_PACKAGING ?: '').trim()
 
@@ -20,9 +21,7 @@ void call() {
     println("[INFO]: Host (deploy)       : ${config.host_deploy ?: '<host_deploy sin definir>'}")
     println("[INFO]: Usuario SSH         : ${ssh_user ?: '<JBOSS_SSH_USER sin definir>'}")
 
-    // Prueba de get_deployment_info: ¿el componente ya está desplegado en este JBoss?
-    def deployed = get_deployment_info(component_name)
-    println("[INFO]: ¿Desplegado actualmente? : ${deployed}")
+    println("[INFO]: ¿Desplegado actualmente? : ${component_deployed} (de la etapa JBoss: deployment info)")
 
     println("[INFO]: ✅ Job de CD recibió los datos correctamente")
 }
