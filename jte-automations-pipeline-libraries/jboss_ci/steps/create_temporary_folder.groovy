@@ -18,8 +18,7 @@ void call() {
 
     echo "Preparando la carpeta temporal ${component_full_path} en: ${host_list}"
 
-    for (int i = 0; i < host_list.size(); i++) {
-        def target_host = host_list[i]
+    host_list.each { target_host ->
         try {
             sh """#!/bin/sh
 ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${target_host} 'rm -rf "${component_full_path}" && mkdir -p "${component_full_path}"'"""

@@ -133,8 +133,8 @@ steps con guion bajo (`despliegue_jboss`, `desplegar_componente`), verbos en inf
 5. **Estructura del template:** `timeout(execution)` → `node(jenkins_agent_label)` → `withFolderProperties` → `try/catch/finally`, con
    `clean_job_workspace()` en el `finally` (viene de una librería global de la instalación). Cada tarea es un `stage`. Todo
    `catch (Exception e)` va precedido de `catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) { throw e }`.
-6. **CPS de Jenkins:** preferir `for` clásico a `each`/`eachWithIndex`/`collect` con closures que llamen steps; `findAll {}.size()` en vez
-   de `count {}`.
+6. **CPS de Jenkins:** `each` con closures que llaman steps funciona en la instalación del usuario y es su preferencia (ej.
+   `host_list.each { target_host -> ... }`); evitar `collect`/`count {}` con steps adentro (`findAll {}.size()` en vez de `count {}`).
 7. **Fechas con `date` en el nodo** con la zona horaria de la config (`TZ='<zona>' date +'<formato>'`).
 8. **Correo** con `emailext`, `mimeType: 'text/html'`, `to` = destinatarios + `cc:` por cada copia. Se envía **siempre** (éxito o fallo).
 9. **Diferencia con los repos de monitoreo:** en un despliegue un fallo **sí debe detener** los pasos siguientes (no desplegar en el
