@@ -37,7 +37,7 @@ libraries {
         settings_config = 'GLOBAL_MAVEN_SETTINGS'     // ID del Managed file (Config File Provider) con el settings.xml
         // jdk_version / mvn_version: opcionales; si no van, salen de F_PIPELINE_JDK_TOOL_VERSION / F_PIPELINE_MAVEN_TOOL_VERSION
     }
-    jboss {
+    jboss_ci {
         user = 'usuario-ssh'                              // AJUSTAR: usuario SSH en los servidores JBoss (valor real solo en Jenkins)
         host = ['jboss-1.ejemplo.local', 'jboss-2.ejemplo.local']   // AJUSTAR: servidores JBoss del ambiente (repo público: no poner IPs reales)
         path = '/opt'                                     // carpeta base: la temporal queda en <path>/<component_name>

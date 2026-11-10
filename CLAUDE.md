@@ -206,9 +206,11 @@ scanner de Maven) → aviso y UNSTABLE.
 Cobertura: la mide el pipeline (clase `Test`: `jacoco:prepare-agent test` a `target/jte-jacoco/jacoco.exec`, borra `target/site/jacoco` y
 genera `jacoco:report` solo desde ese exec). El jacoco-maven-plugin del micro no influye; si no se puede medir, Sonar muestra 0%.
 
-Librería `jboss` (dev, qa, uat, main; no en default): `create_temporary_folder` crea `<jboss.path>/<component_name>` en cada `jboss.host` por
-`ssh -o BatchMode=yes <jboss.user>@<host>` (llave del nodo); `jboss_temporary_path()` valida la ruta antes del `rm -rf`. Pendientes:
+Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en default): `create_temporary_folder` crea
+`<jboss_ci.path>/<component_name>` en cada `jboss_ci.host` por `ssh -o BatchMode=yes <jboss_ci.user>@<host>` (llave del nodo); `jboss_temporary_path()` valida la ruta antes del `rm -rf`. Pendientes:
 `copy_artifact_on_server`, `trigger_jboss_deploy_job`, `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
+El job de CD (uno por servidor/aplicación, ej. `pais/jboss/app1/dev-deployment`) tendrá su propia config del SERVIDOR y la librería
+`jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
 
 Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →
 success/failed/canceled (UNSTABLE → success en GitLab: no tiene "warning" y un failed tumbaría el pipeline; la advertencia queda en Jenkins). Conexión: `gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')`
