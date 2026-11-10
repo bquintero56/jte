@@ -217,15 +217,15 @@ el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. 
 parámetros, wait)` lanza cada job de CD (COMPONENT_NAME, COMPONENT_PACKAGING) con `propagate: false` y revisa el resultado: SUCCESS sigue,
 UNSTABLE → amarillo y sigue, otro → detiene. `remove_temporary_folder` va en el `finally` (si
 `temporary_folder_created`): borra en todos los hosts, nunca lanza error (no tapa el error original); si no puede borrar en alguno → [WARN] + UNSTABLE.
-CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librería `jboss_cd`
+CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librerías `jboss_cd_standalone` / `jboss_cd_domain`
 (`host_deploy` String obligatorio: un host por config; `user` opcional; la carpeta del artefacto es
 `<JBOSS_TEMP_PATH>/<COMPONENT_NAME>`, la misma del CI, sin `path` en la config). `get_deployment_info(componente)` consulta por SSH
 `<jboss_home>/bin/jboss-cli.sh --connect --command="deployment-info --name=<componente>*"` (jboss_home default `/opt/jboss-eap`, credencial
 `cli_credentials_id` default `jboss-cli`, clave como variable del shell) y devuelve true/false; error de conexión/autenticación → ❌. Es una etapa visible del template del CD
 (`JBoss: deployment info`); flujo del CD: deployment info → undeploy (si ya existe; PENDIENTE, hoy se detiene) → `deploy_component(nombre, empaquetado)` →
 verify (`get_deployment_info` otra vez). Deploy: `jboss-cli --command='deploy <JBOSS_TEMP_PATH>/<componente>/<archivo>'` con ruta absoluta en el
-servidor (sin `cd`); un solo template para standalone y domain: `jboss_cd.jboss_mode` (default standalone) y, en domain,
-`server_groups` → `--server-groups=g1,g2` y una config por servidor JBoss:
+servidor (sin `cd`); un solo template para standalone y domain; DOS librerías con los mismos steps:
+`jboss_cd_standalone` y `jboss_cd_domain` (`server_groups` obligatorio → `--server-groups=g1,g2`); la config del servidor carga una sola y una config por servidor JBoss:
 `jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss-server/<app>/<ambiente>/<servidor>-deployment`
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,

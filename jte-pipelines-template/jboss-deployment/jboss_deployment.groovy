@@ -1,6 +1,7 @@
 // CD de componentes JBoss: lo lanza el CI del micro (trigger_jboss_deploy_job) con COMPONENT_NAME y COMPONENT_PACKAGING.
 // Un job por servidor JBoss (ej. pais/jboss-server/app1/dev/jboss-ui-deployment), con la config del SERVIDOR.
-// Flujo: deployment info → undeploy (solo si ya existe; PENDIENTE) → deploy → verify. Standalone o domain según jboss_cd.jboss_mode.
+// Flujo: deployment info → undeploy (solo si ya existe; PENDIENTE) → deploy → verify. Standalone o domain según la librería que carga la config del servidor
+// (jboss_cd_standalone o jboss_cd_domain: mismos nombres de steps).
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
     disableConcurrentBuilds(),

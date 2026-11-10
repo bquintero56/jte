@@ -1,7 +1,6 @@
 // Despliega en el JBoss del servidor (config.host_deploy) el artefacto que dejó el CI en <JBOSS_TEMP_PATH>/<COMPONENT_NAME>.
 //   Artefacto : único *.<component_packaging> en la carpeta temporal DEL SERVIDOR (jboss-cli corre en el servidor, ruta absoluta)
-//   Modo      : config.jboss_mode = 'standalone' (default) → deploy <archivo>
-//                                   'domain'               → deploy <archivo> --server-groups=<config.server_groups>
+//   Modo      : STANDALONE → jboss-cli deploy <archivo>  (para domain usar la librería jboss_cd_domain)
 //   jboss-cli : <jboss_home>/bin/jboss-cli.sh (default /opt/jboss-eap), credencial config.cli_credentials_id (default 'jboss-cli')
 //   SSH       : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
 // Si el componente ya estaba desplegado, antes debe correr undeploy_component (si no, JBoss rechaza el deploy por duplicado).
@@ -11,7 +10,6 @@ void call(String component_name, String component_packaging) {
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
     def credentials_id = String.valueOf(config.cli_credentials_id ?: 'jboss-cli').trim()
     def temp_base      = String.valueOf(env.JBOSS_TEMP_PATH ?: '').trim().replaceFirst(/\/+$/, '')
-    def mode           = String.valueOf(config.jboss_mode ?: 'standalone').trim().toLowerCase()
     def name           = String.valueOf(component_name ?: '').trim()
     def packaging      = String.valueOf(component_packaging ?: '').trim()
 
@@ -26,20 +24,9 @@ void call(String component_name, String component_packaging) {
         error("[ERROR]: ❌ Falta la propiedad de carpeta JBOSS_TEMP_PATH (ruta absoluta, la misma que usa el CI).")
     }
     if (!ssh_user) {
-        error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd.user en la config).')
-    }
-    if (!(mode in ['standalone', 'domain'])) {
-        error("[ERROR]: ❌ jboss_cd.jboss_mode no válido: '${mode}'. Valores: 'standalone' o 'domain'.")
+        error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd_standalone.user en la config).')
     }
 
-    def target_args = ''
-    if (mode == 'domain') {
-        def groups = config.server_groups ?: []
-        if (!groups) {
-            error('[ERROR]: ❌ JBoss en modo domain: falta jboss_cd.server_groups (ej. [\'main-server-group\']) en la config del servidor.')
-        }
-        target_args = " --server-groups=${groups.join(',')}"
-    }
 
     def temp_dir = "${temp_base}/${name}"
 
@@ -58,7 +45,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
     def artifact = found
 
     // 2. Deploy con jboss-cli (ruta absoluta del archivo en el servidor)
-    println("[INFO]: Desplegando ${artifact} en JBoss ${mode} (${host}${mode == 'domain' ? ', grupos: ' + config.server_groups : ''})")
+    println("[INFO]: Desplegando ${artifact} en JBoss standalone (${host})")
 
     def status_code = 0
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -66,7 +53,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
                                       passwordVariable: 'JBOSS_CLI_PASSWORD')]) {
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log
         status_code = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='deploy ${artifact}${target_args}'" 2>&1""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='deploy ${artifact}'" 2>&1""",
                          returnStatus: true)
     }
 

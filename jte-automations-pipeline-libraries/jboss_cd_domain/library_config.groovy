@@ -1,4 +1,6 @@
-// Librería jboss_cd (lado CD, config del SERVIDOR): despliega en JBoss el componente que dejó el CI en la carpeta temporal.
+// Librería jboss_cd_domain (lado CD, config del SERVIDOR): despliega en un JBoss en modo DOMAIN el componente que dejó el CI.
+// Misma interfaz que jboss_cd_standalone (get_deployment_info, deploy_component): el template jboss-deployment es uno solo
+// y la config del servidor elige la librería según el modo de su JBoss. Nunca cargar las dos en la misma config.
 // La usa el job de despliegue (uno por servidor JBoss, ej. pais/jboss-server/app1/dev/jboss-ui-deployment), que lanza el CI con
 // los parámetros COMPONENT_NAME y COMPONENT_PACKAGING.
 // Carpeta del artefacto: <JBOSS_TEMP_PATH>/<COMPONENT_NAME>, la MISMA que arma el CI (propiedad de carpeta, no va en la config).
@@ -6,13 +8,12 @@
 // Repo público: en la config del repo van valores de ejemplo; los reales solo en la copia de Jenkins.
 fields {
     required {
-        host_deploy = String    // host del servidor JBoss donde se despliega (uno por config)
+        host_deploy        = String    // host del servidor JBoss donde se despliega (uno por config)
+        server_groups      = List      // server groups del domain donde se despliega (ej. ['main-server-group'])
     }
     optional {
         user               = String    // solo si este servidor usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
         jboss_home         = String    // ruta de JBoss en el servidor (default '/opt/jboss-eap')
         cli_credentials_id = String    // credencial Username with password del usuario de administración de JBoss (default 'jboss-cli')
-        jboss_mode         = String    // 'standalone' (default) o 'domain'
-        server_groups      = List      // solo en domain: server groups donde se despliega (ej. ['main-server-group'])
     }
 }

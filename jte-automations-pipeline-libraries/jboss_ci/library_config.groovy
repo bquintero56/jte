@@ -1,5 +1,5 @@
 // Librería jboss_ci (lado CI, config del MICRO): carpeta temporal en los servidores JBoss, copia del artefacto y disparo del job de CD.
-// El despliegue lo hace el job de CD con la librería jboss_cd (config del SERVIDOR: path, host_deploy, user...).
+// El despliegue lo hace el job de CD con la librería jboss_cd_standalone o jboss_cd_domain (config del SERVIDOR).
 // Conexión: ssh <usuario>@<host> con la llave SSH que ya tiene el nodo de Jenkins (sin credentialsId).
 // Usuario y carpeta base: propiedades de carpeta JBOSS_SSH_USER y JBOSS_TEMP_PATH (globales en Jenkins, no van en el repo;
 // el job de CD lee las mismas). user / path en la config solo para excepciones.

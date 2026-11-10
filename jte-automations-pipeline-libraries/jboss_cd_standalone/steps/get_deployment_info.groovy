@@ -12,10 +12,10 @@ Boolean call(String component_name) {
     def credentials_id = String.valueOf(config.cli_credentials_id ?: 'jboss-cli').trim()
 
     if (!host) {
-        error('[ERROR]: ❌ Falta jboss_cd.host_deploy en la config del servidor.')
+        error('[ERROR]: ❌ Falta jboss_cd_standalone.host_deploy en la config del servidor.')
     }
     if (!ssh_user) {
-        error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd.user en la config).')
+        error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd_standalone.user en la config).')
     }
     if (!component_name?.trim()) {
         error('[ERROR]: ❌ Falta el parámetro COMPONENT_NAME (este job lo lanza el CI del micro con COMPONENT_NAME y COMPONENT_PACKAGING).')
