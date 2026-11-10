@@ -1,4 +1,4 @@
-// Crea (o recrea vacía) la carpeta temporal <path>/<component_name> en cada servidor JBoss del ambiente.
+// Crea (o recrea vacía) la carpeta temporal <JBOSS_TEMP_PATH>/<component_name> en cada servidor JBoss del ambiente.
 // Si falla en un servidor, detiene el pipeline (no se sigue con los demás).
 // Conexión: ssh <jboss_ssh_user()>@<host> con la llave del nodo de Jenkins.
 void call() {

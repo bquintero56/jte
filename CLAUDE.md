@@ -207,8 +207,9 @@ Cobertura: la mide el pipeline (clase `Test`: `jacoco:prepare-agent test` a `tar
 genera `jacoco:report` solo desde ese exec). El jacoco-maven-plugin del micro no influye; si no se puede medir, Sonar muestra 0%.
 
 Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en default): `create_temporary_folder` crea
-`<jboss_ci.path>/<component_name>` en cada `jboss_ci.host` por `ssh -o BatchMode=yes <usuario>@<host>` (llave del nodo; usuario = propiedad de carpeta
-`JBOSS_SSH_USER`, o `jboss_ci.user` como excepción); `jboss_temporary_path()` valida la ruta antes del `rm -rf`. Pendientes:
+`<JBOSS_TEMP_PATH>/<component_name>` en cada `jboss_ci.host` por `ssh -o BatchMode=yes <usuario>@<host>` (llave del nodo; usuario = propiedad de carpeta
+`JBOSS_SSH_USER`, o `jboss_ci.user` como excepción); carpeta base = propiedad de carpeta `JBOSS_TEMP_PATH` (o `jboss_ci.path`
+como excepción), la misma que leerá el CD; `jboss_temporary_path()` valida la ruta antes del `rm -rf`. Pendientes:
 `copy_artifact_on_server`, `trigger_jboss_deploy_job`, `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
 El job de CD (uno por servidor/aplicación, ej. `pais/jboss/app1/dev-deployment`) tendrá su propia config del SERVIDOR y la librería
 `jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.

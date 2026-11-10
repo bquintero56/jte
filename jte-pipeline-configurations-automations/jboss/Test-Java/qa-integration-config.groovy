@@ -39,7 +39,6 @@ libraries {
     }
     jboss_ci {
         host = ['jboss-1.ejemplo.local', 'jboss-2.ejemplo.local']   // AJUSTAR: servidores JBoss del ambiente (repo público: no poner IPs reales)
-        path = '/opt'                                     // carpeta base: la temporal queda en <path>/<component_name>
         component_packaging         = 'war'
         component_name              = 'Test-Java'
         artifact_workspace_location = 'target'                // carpeta del artefacto en el workspace
