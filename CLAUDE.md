@@ -185,7 +185,8 @@ template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 Un template por job/rama en `jte-pipelines-template/jboss-integration/`: `default_integration` (job `integration`, cualquier otra rama),
 `dev_`, `qa_`, `uat_`, `main_integration`. Flujo: checkout → build Maven → carpeta temporal en el servidor → copia del artefacto →
 dispara el job de CD (`jboss-deployment`, por crear) y lo espera → borra la carpeta temporal. Se agregan las etapas una por una y el
-usuario prueba cada una antes de pasar a la siguiente (probado: checkout en default, dev, qa y uat; build Maven; carpeta temporal en JBoss).
+usuario prueba cada una antes de pasar a la siguiente (probado: checkout en default, dev, qa y uat; build Maven; carpeta temporal, copia, disparo del CD y borrado en el finally).
+Pendiente: volver a poner compile, unit test y checkstyle en `dev_integration` (recortado para pruebas).
 Configs separadas: `jboss-micro/` (CI, una carpeta por micro) y `jboss-server/` (CD, una config por servidor JBoss).
 Configs por micro: archivos sueltos `jte-pipeline-configurations-automations/jboss-micro/<micro>/<rama>-integration-config.groovy`
 (default, dev, qa, uat; main pendiente). Cada job de Jenkins apunta a su archivo con la ruta de config del job (*Pipeline Configuration
@@ -223,8 +224,7 @@ CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,
 get_deployment_info, publish_artifact_to_nexus). Hosts/usuario reales solo en Jenkins.
-El job de CD (uno por servidor JBoss, ej. `pais/jboss-server/app1/dev/jboss-ui-deployment`) tendrá su propia config del SERVIDOR y la librería
-`jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
+Nombres de librería con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
 
 Estado por etapa en GitLab: cada etapa usa `gitlab_stage('nombre') { ... }` (librería `gitlab`) en vez de `stage`; informa running →
 success/failed/canceled (UNSTABLE → success en GitLab: no tiene "warning" y un failed tumbaría el pipeline; la advertencia queda en Jenkins). Conexión: `gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')`
