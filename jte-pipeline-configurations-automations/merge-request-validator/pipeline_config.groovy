@@ -16,8 +16,8 @@ keywords {
 
 libraries {
     // Misma librería que el orquestador de pushes: aquí se usa su step validar_merge_request.
-    // prefijoRuta es obligatorio en la librería (lo usa el orquestador); el validador no lo usa.
+    // country es obligatorio en la librería (lo usa el orquestador); el validador no lo usa.
     webhook {
-        prefijoRuta = 'mexico'
+        country = 'mexico'
     }
 }

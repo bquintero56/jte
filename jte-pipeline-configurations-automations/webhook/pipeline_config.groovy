@@ -1,5 +1,5 @@
 // Job ORQUESTADOR: un solo job recibe el webhook de TODOS los proyectos de GitLab y lanza
-// <prefijoRuta>/<appcode>/<repo>/<rama | integration>.
+// <country>/<appcode>/<repo>/<rama | integration>.
 jte {
     allow_scm_jenkinsfile = false
     pipeline_template     = 'webhook/push_orchestrator.groovy'
@@ -17,6 +17,6 @@ keywords {
 
 libraries {
     webhook {
-        prefijoRuta    = 'mexico'
+        country = 'mexico'
     }
 }
