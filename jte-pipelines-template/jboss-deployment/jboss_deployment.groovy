@@ -11,8 +11,10 @@ properties([
     ])
 ])
 
-// Resultado de get_deployment_info: true si el componente ya está desplegado en este JBoss
-def component_deployed = false
+// Estado del deployment antes de desplegar (get_deployment_info): [exists, name, enabled, status, running]
+def deployment_info = [:]
+// true si deploy_component desplegó de verdad (false si fue simulación con dry_run)
+def deployed_now = false
 
 timeout(time: execution.time, unit: execution.units) {
 
@@ -22,26 +24,32 @@ timeout(time: execution.time, unit: execution.units) {
                 currentBuild.description = "${params.COMPONENT_NAME ?: '-'}.${params.COMPONENT_PACKAGING ?: '-'}"
 
                 stage('JBoss: deployment info') {
-                    component_deployed = get_deployment_info(params.COMPONENT_NAME)
+                    deployment_info = get_deployment_info(params.COMPONENT_NAME)
                 }
 
                 stage('JBoss: undeploy component') {
-                    if (component_deployed) {
-                        // PENDIENTE: undeploy_component(params.COMPONENT_NAME). Mientras tanto se detiene: JBoss rechazaría el deploy por duplicado.
-                        error("[ERROR]: ❌ '${params.COMPONENT_NAME}' ya está desplegado y el undeploy todavía no está implementado.")
+                    if (deployment_info.exists) {
+                        // PENDIENTE: undeploy_component(params.COMPONENT_NAME). Sin undeploy, un deploy real fallaría por duplicado.
+                        println("[WARN]: ⚠️ '${deployment_info.name}' ya existe (ENABLED=${deployment_info.enabled}, STATUS=${deployment_info.status}): el undeploy todavía no está implementado")
+                    } else {
+                        println("[INFO]: '${params.COMPONENT_NAME}' no está desplegado: no hace falta undeploy")
                     }
-                    println("[INFO]: '${params.COMPONENT_NAME}' no está desplegado: no hace falta undeploy")
                 }
 
                 stage('JBoss: deploy component') {
-                    deploy_component(params.COMPONENT_NAME, params.COMPONENT_PACKAGING)
+                    deployed_now = deploy_component(params.COMPONENT_NAME, params.COMPONENT_PACKAGING)
                 }
 
                 stage('JBoss: verify deployment') {
-                    if (!get_deployment_info(params.COMPONENT_NAME)) {
-                        error("[ERROR]: ❌ '${params.COMPONENT_NAME}' no quedó desplegado en JBoss")
+                    if (!deployed_now) {
+                        println("[INFO]: Sin verificación: el deploy fue una simulación (dry_run)")
+                    } else {
+                        def after = get_deployment_info(params.COMPONENT_NAME)
+                        if (!after.running) {
+                            error("[ERROR]: ❌ '${params.COMPONENT_NAME}' no quedó funcionando en JBoss (existe=${after.exists}, ENABLED=${after.enabled}, STATUS=${after.status})")
+                        }
+                        println("[INFO]: ✅ Despliegue verificado: '${after.name}' ENABLED=true, STATUS=OK")
                     }
-                    println("[INFO]: ✅ Despliegue verificado: '${params.COMPONENT_NAME}'")
                 }
             }
             catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {

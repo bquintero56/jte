@@ -4,7 +4,8 @@
 //   jboss-cli : <jboss_home>/bin/jboss-cli.sh (default /opt/jboss-eap), credencial config.cli_credentials_id (default 'jboss-cli')
 //   SSH       : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
 // Si el componente ya estaba desplegado, antes debe correr undeploy_component (si no, JBoss rechaza el deploy por duplicado).
-void call(String component_name, String component_packaging) {
+// Devuelve true si desplegó (misma interfaz que jboss_cd_standalone; aquí no hay dry_run todavía).
+Boolean call(String component_name, String component_packaging) {
     def host           = String.valueOf(config.host_deploy ?: '').trim()
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
@@ -63,4 +64,5 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_
     }
 
     println("[INFO]: ✅ ${artifact} desplegado en JBoss (${host})")
+    return true
 }

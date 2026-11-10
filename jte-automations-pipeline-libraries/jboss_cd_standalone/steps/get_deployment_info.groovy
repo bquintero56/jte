@@ -1,11 +1,19 @@
-// Consulta en el JBoss del servidor (config.host_deploy) si el componente está desplegado, con jboss-cli por SSH.
+// Consulta en el JBoss standalone del servidor (config.host_deploy) el estado del deployment del componente, con jboss-cli por SSH.
 //   jboss-cli   : <jboss_home>/bin/jboss-cli.sh --connect -u=... -p=... --command="deployment-info --name=<componente>*"
 //   jboss_home  : config.jboss_home (default '/opt/jboss-eap')
 //   credencial  : usuario/clave de administración de JBoss = credencial Username with password config.cli_credentials_id (default 'jboss-cli')
 //   SSH         : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
-// Devuelve true si hay un deployment cuyo nombre empieza con el componente (ej. Test-Java.war), false si no está.
-// Falla (❌) si no se puede conectar a JBoss o la autenticación falla: en ese caso no se sabe si está desplegado.
-Boolean call(String component_name) {
+// Salida de deployment-info (standalone):
+//   NAME           RUNTIME-NAME   PERSISTENT ENABLED STATUS
+//   Test-Java.war  Test-Java.war  true       false   STOPPED
+// Devuelve un mapa:
+//   exists  : true si hay un deployment cuyo nombre empieza con el componente (aunque esté detenido)
+//   name    : nombre del deployment (ej. 'Test-Java.war'), '' si no existe
+//   enabled : true si ENABLED = true
+//   status  : STATUS (OK, STOPPED, FAILED...), '' si no existe
+//   running : true si enabled y status = OK (desplegado y funcionando)
+// Falla (❌) si no se puede conectar a JBoss o la autenticación falla: en ese caso no se sabe el estado.
+Map call(String component_name) {
     def host           = String.valueOf(config.host_deploy ?: '').trim()
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
@@ -24,7 +32,7 @@ Boolean call(String component_name) {
         error("[ERROR]: ❌ Nombre de componente no válido para jboss-cli: '${component_name}'.")
     }
 
-    println("[INFO]: Verificando si '${component_name}' está desplegado en JBoss (${host})")
+    println("[INFO]: Consultando el estado de '${component_name}' en JBoss standalone (${host})")
 
     def output = ''
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -47,16 +55,28 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_
         error("[ERROR]: ❌ No se pudo consultar JBoss en ${host} (conexión, autenticación o ruta de jboss-cli). Ver la salida arriba.")
     }
 
-    // Fila de la tabla de deployment-info cuyo nombre (primera columna) empieza con el componente
+    def info  = [exists: false, name: '', enabled: false, status: '', running: false]
     def lines = output.split('\n')
     for (int i = 0; i < lines.length; i++) {
-        def first_column = lines[i].trim().split(/\s+/)[0]
-        if (first_column.startsWith(component_name)) {
-            println("[INFO]: ✅ Componente '${component_name}' desplegado en JBoss (${first_column})")
-            return true
+        def columns = lines[i].trim().split(/\s+/)
+        if (columns[0].startsWith(component_name)) {
+            info.exists  = true
+            info.name    = columns[0]
+            info.enabled = columns.length > 3 && columns[3] == 'true'
+            info.status  = columns.length > 4 ? columns[4] : 'UNKNOWN'
+            info.running = info.enabled && info.status == 'OK'
+            break
         }
     }
 
-    println("[WARN]: ⚠️ Componente '${component_name}' no encontrado en deployment-info de ${host}")
-    return false
+    if (!info.exists) {
+        println("[INFO]: '${component_name}' no está desplegado en ${host}")
+    }
+    else if (info.running) {
+        println("[INFO]: ✅ '${info.name}' desplegado y funcionando (ENABLED=true, STATUS=OK)")
+    }
+    else {
+        println("[WARN]: ⚠️ '${info.name}' existe pero NO está funcionando (ENABLED=${info.enabled}, STATUS=${info.status})")
+    }
+    return info
 }

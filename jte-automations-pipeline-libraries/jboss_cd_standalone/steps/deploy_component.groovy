@@ -4,7 +4,8 @@
 //   jboss-cli : <jboss_home>/bin/jboss-cli.sh (default /opt/jboss-eap), credencial config.cli_credentials_id (default 'jboss-cli')
 //   SSH       : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
 // Si el componente ya estaba desplegado, antes debe correr undeploy_component (si no, JBoss rechaza el deploy por duplicado).
-void call(String component_name, String component_packaging) {
+// Devuelve true si desplegó y false si fue simulación (dry_run): el template solo verifica si devolvió true.
+Boolean call(String component_name, String component_packaging) {
     def host           = String.valueOf(config.host_deploy ?: '').trim()
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
@@ -45,6 +46,15 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
     def artifact = found
 
     // 2. Deploy con jboss-cli (ruta absoluta del archivo en el servidor)
+    def cli_command = "deploy ${artifact}"
+
+    // Simulación (config.dry_run = true): muestra el comando y NO toca JBoss
+    if (config.dry_run == true) {
+        println("[WARN]: ⚠️ SIMULACIÓN (jboss_cd_standalone.dry_run = true): NO se despliega nada en ${host}.")
+        println("[INFO]: Comando que se ejecutaría en ${host}: ${jboss_home}/bin/jboss-cli.sh --connect --command='${cli_command}'")
+        return false
+    }
+
     println("[INFO]: Desplegando ${artifact} en JBoss standalone (${host})")
 
     def status_code = 0
@@ -53,7 +63,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
                                       passwordVariable: 'JBOSS_CLI_PASSWORD')]) {
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log
         status_code = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='deploy ${artifact}'" 2>&1""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1""",
                          returnStatus: true)
     }
 
@@ -62,4 +72,5 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_
     }
 
     println("[INFO]: ✅ ${artifact} desplegado en JBoss (${host})")
+    return true
 }
