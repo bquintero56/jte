@@ -4,7 +4,7 @@
 // Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit (conexión GitLab en properties).
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
-// PRUEBAS: por ahora dev solo hace checkout → build → carpeta temporal (sin compile, unit test ni checkstyle).
+// PRUEBAS: por ahora dev solo hace checkout → build → carpeta temporal → copia del artefacto (sin compile, unit test ni checkstyle).
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
     disableConcurrentBuilds(),
@@ -39,8 +39,11 @@ timeout(time: execution.time, unit: execution.units) {
                     create_temporary_folder()
                 }
 
+                gitlab_stage('JBoss: copy artifact') {
+                    copy_artifact_on_server()
+                }
+
                 // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   JBoss: copy artifact           → copy_artifact_on_server()
                 //   Trigger parametrized job       → trigger_jboss_deploy_job(dev.deployment_project, ...)
                 //   JBoss: remove temporary folder (en el finally, para que se borre siempre)
             }

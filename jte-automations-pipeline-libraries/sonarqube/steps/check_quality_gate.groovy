@@ -13,18 +13,18 @@ void call() {
         }
 
         if (quality_gate.status == 'OK') {
-            echo '✅ Quality Gate aprobado'
+            println('[INFO]: ✅ Quality Gate aprobado')
         }
         else if (config.enforce_quality_gates == true) {
-            error("❌ Quality Gate NO aprobado (estado: ${quality_gate.status}). Revisar el proyecto en SonarQube.")
+            error("[ERROR]: ❌ Quality Gate NO aprobado (estado: ${quality_gate.status}). Revisar el proyecto en SonarQube.")
         }
         else {
-            unstable("⚠️ Quality Gate NO aprobado (estado: ${quality_gate.status}). El pipeline continúa (enforce_quality_gates = false).")
+            unstable("[WARN]: ⚠️ Quality Gate NO aprobado (estado: ${quality_gate.status}). El pipeline continúa (enforce_quality_gates = false).")
         }
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
         // timeout esperando el webhook también llega como FlowInterruptedException
-        echo "❌ No llegó el resultado del Quality Gate en ${minutes} min: revisar el webhook global de SonarQube (https://<jenkins>/sonarqube-webhook/)."
+        println("[ERROR]: ❌ No llegó el resultado del Quality Gate en ${minutes} min: revisar el webhook global de SonarQube (https://<jenkins>/sonarqube-webhook/).")
         throw e
     }
     catch (Exception e) {

@@ -14,7 +14,7 @@ void call() {
     try { project_key = component_name } catch (MissingPropertyException e) { project_key = '' }
 
     if (!project_key) {
-        error('❌ Falta component_name en keywords de la config (es el project key de SonarQube).')
+        error('[ERROR]: ❌ Falta component_name en keywords de la config (es el project key de SonarQube).')
     }
 
     try {
@@ -31,11 +31,11 @@ void call() {
                     def status_code = sh(script: """#!/bin/sh
 mvn ${scanner} ${sonar_args}""", returnStatus: true)
                     if (status_code != 0) {
-                        error("❌ Falló el análisis de SonarQube del proyecto '${project_key}' (código ${status_code}).")
+                        error("[ERROR]: ❌ Falló el análisis de SonarQube del proyecto '${project_key}' (código ${status_code}).")
                     }
                 }
             }
-            echo "✅ Análisis publicado en SonarQube: proyecto '${project_key}'"
+            println("[INFO]: ✅ Análisis publicado en SonarQube: proyecto '${project_key}'")
         }
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
@@ -63,7 +63,7 @@ String build_sonar_args(String project_key) {
         content = resource('sonarqube/sonar-project.properties')
         origin  = 'general'
     }
-    echo "SonarQube sonar-project.properties: ${origin}"
+    println("[INFO]: SonarQube sonar-project.properties: ${origin}")
 
     def props = [:]
     def lines = content.split('\n')
@@ -75,7 +75,7 @@ String build_sonar_args(String project_key) {
         def key   = line.substring(0, line.indexOf('=')).trim()
         def value = line.substring(line.indexOf('=') + 1).trim()
         if (ignored_keys.contains(key)) {
-            echo "⚠️ ${key} en sonar-project.properties se ignora (lo define el pipeline)."
+            println("[WARN]: ⚠️ ${key} en sonar-project.properties se ignora (lo define el pipeline).")
             continue
         }
         props[key] = value
@@ -112,8 +112,8 @@ find . -name sonar-project.properties -not -path "*/target/*" 2>/dev/null | sed 
 true''', returnStdout: true).trim()
 
     if (found) {
-        echo "⚠️ El repo intenta configurar SonarQube (las propiedades de exclusión se anulan desde el pipeline):\n${found}"
-        unstable('⚠️ Configuración de SonarQube en el repo del micro (la controla el pipeline).')
+        println("[WARN]: ⚠️ El repo intenta configurar SonarQube (las propiedades de exclusión se anulan desde el pipeline):\n${found}")
+        unstable('[WARN]: ⚠️ Configuración de SonarQube en el repo del micro (la controla el pipeline).')
     }
 }
 

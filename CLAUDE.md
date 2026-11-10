@@ -129,7 +129,8 @@ steps con guion bajo (`despliegue_jboss`, `desplegar_componente`), verbos en inf
    `sshagent`) y en la config solo el `credentialsId`. Los secretos se usan como variables de shell (`\$VAR`), nunca interpolados en Groovy.
 3. **Log limpio.** Los `sh` usan `"""#!/bin/sh` pegado a las comillas (sin shebang Jenkins corre `sh -x` y llena el log de trazas).
    Continuaciones de línea dentro del bloque: `\\`. En GString, `$(...)` y `$VAR` de shell se escriben `\$(...)` y `\$VAR`.
-4. **Log con ✅ / ❌** por paso y servidor, y un **resumen final**.
+4. **Logs con `println` y prefijo** (preferencia del usuario, no `echo`): `println("[INFO]: ...")`, `println("[WARN]: ⚠️ ...")`,
+   `error("[ERROR]: ❌ ...")`, `unstable("[WARN]: ⚠️ ...")`; ✅ en los éxitos (`[INFO]: ✅ ...`) por paso y servidor, y un **resumen final**.
 5. **Estructura del template:** `timeout(execution)` → `node(jenkins_agent_label)` → `withFolderProperties` → `try/catch/finally`, con
    `clean_job_workspace()` en el `finally` (viene de una librería global de la instalación). Cada tarea es un `stage`. Todo
    `catch (Exception e)` va precedido de `catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) { throw e }`.
@@ -209,8 +210,8 @@ genera `jacoco:report` solo desde ese exec). El jacoco-maven-plugin del micro no
 Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en default): `create_temporary_folder` crea
 `<JBOSS_TEMP_PATH>/<component_name>` en cada `jboss_ci.host` por `ssh -o BatchMode=yes <usuario>@<host>` (llave del nodo; usuario = propiedad de carpeta
 `JBOSS_SSH_USER`, o `jboss_ci.user` como excepción); carpeta base = propiedad de carpeta `JBOSS_TEMP_PATH` (o `jboss_ci.path`
-como excepción), la misma que leerá el CD; `jboss_temporary_path()` valida la ruta antes del `rm -rf`. Pendientes:
-`copy_artifact_on_server`, `trigger_jboss_deploy_job`, `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
+como excepción), la misma que leerá el CD; `jboss_temporary_path()` valida la ruta antes del `rm -rf`. `copy_artifact_on_server` copia
+el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. Pendientes: `trigger_jboss_deploy_job`, `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
 El job de CD (uno por servidor/aplicación, ej. `pais/jboss/app1/dev-deployment`) tendrá su propia config del SERVIDOR y la librería
 `jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
 

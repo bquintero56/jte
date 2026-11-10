@@ -42,9 +42,9 @@ timeout(time: execution.time, unit: execution.units) {
                 appcode         = partes.size() >= 4 ? partes[partes.size() - 2] : ''
 
                 if (!branch_name || !repository_name || !appcode) {
-                    echo '⚠️ Sin datos del webhook (ejecución manual o primera ejecución para registrar el trigger): no se lanza ningún job.'
+                    println('[WARN]: ⚠️ Sin datos del webhook (ejecución manual o primera ejecución para registrar el trigger): no se lanza ningún job.')
                 } else if ((env.gitlabAfter ?: '') ==~ /0+/) {
-                    echo "⚠️ Se borró la rama '${branch_name}' en ${appcode}/${repository_name}: no se lanza ningún job."
+                    println("[WARN]: ⚠️ Se borró la rama '${branch_name}' en ${appcode}/${repository_name}: no se lanza ningún job.")
                 } else {
                     currentBuild.description = "${appcode}/${repository_name} @ ${branch_name}"
                     disparar_pipeline_aplicacion(branch_name, repository_name, appcode)

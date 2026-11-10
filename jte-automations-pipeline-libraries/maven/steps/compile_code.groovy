@@ -15,7 +15,7 @@ void call() {
             withMaven(globalMavenSettingsConfig: config.settings_config, jdk: jdk_version, maven: mvn_version, options: mvn_opts, traceability: false) {
                 compile.applicationCode()
             }
-            echo '✅ Código compilado'
+            println('[INFO]: ✅ Código compilado')
         }
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {

@@ -50,8 +50,11 @@ timeout(time: execution.time, unit: execution.units) {
                     create_temporary_folder()
                 }
 
+                gitlab_stage('JBoss: copy artifact') {
+                    copy_artifact_on_server()
+                }
+
                 // PRÓXIMAS ETAPAS (se agregan una por una al probarlas):
-                //   JBoss: copy artifact           → copy_artifact_on_server()
                 //   Trigger parametrized job       → trigger_jboss_deploy_job(uat.deployment_project, ...)
                 //   JBoss: remove temporary folder (en el finally, para que se borre siempre)
             }

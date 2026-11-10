@@ -26,10 +26,10 @@ void call() {
                 }
 
                 if (sin_violaciones) {
-                    echo '✅ Checkstyle sin errores'
+                    println('[INFO]: ✅ Checkstyle sin errores')
                 }
                 else {
-                    unstable('⚠️ Checkstyle encontró errores de estilo (ver el log de este stage). El pipeline continúa.')
+                    unstable('[WARN]: ⚠️ Checkstyle encontró errores de estilo (ver el log de este stage). El pipeline continúa.')
                 }
             }
             else {
@@ -68,6 +68,6 @@ String write_suppressions() {
     }
 
     writeFile(file: file, text: content)
-    echo "Checkstyle suppressions: ${origin} → ${file}"
+    println("[INFO]: Checkstyle suppressions: ${origin} → ${file}")
     return file
 }

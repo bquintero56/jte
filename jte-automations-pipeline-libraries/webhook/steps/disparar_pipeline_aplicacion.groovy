@@ -15,12 +15,12 @@ void call(String branch_name, String repository_name, String appcode) {
 
         try {
             if (job_name == null) {
-                error('❌ No se pudo armar job_name con los datos del webhook.')
+                error('[ERROR]: ❌ No se pudo armar job_name con los datos del webhook.')
             }
 
             def job_parameters = [string(name: 'BRANCH', value: branch_name)]
 
-            echo "✅ Lanzando job de la aplicación: ${job_name} (BRANCH=${branch_name})"
+            println("[INFO]: ✅ Lanzando job de la aplicación: ${job_name} (BRANCH=${branch_name})")
 
             build(job: job_name, wait: false, parameters: job_parameters, propagate: false)
         }
@@ -28,7 +28,7 @@ void call(String branch_name, String repository_name, String appcode) {
             throw e
         }
         catch (Exception e) {
-            error("❌ Falló el disparo del job '${job_name}': ${e.message ?: e.toString()}")
+            error("[ERROR]: ❌ Falló el disparo del job '${job_name}': ${e.message ?: e.toString()}")
         }
     }
 }

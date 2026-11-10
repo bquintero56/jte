@@ -16,7 +16,7 @@ void call() {
             withMaven(globalMavenSettingsConfig: config.settings_config, jdk: jdk_version, maven: mvn_version, options: mvn_opts, traceability: true) {
                 pack.applicationBinary()
             }
-            echo "✅ Componente empaquetado (JDK ${jdk_version}, Maven ${mvn_version})"
+            println("[INFO]: ✅ Componente empaquetado (JDK ${jdk_version}, Maven ${mvn_version})")
         }
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {

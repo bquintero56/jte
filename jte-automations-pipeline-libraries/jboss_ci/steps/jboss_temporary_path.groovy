@@ -11,10 +11,10 @@ String call() {
     }
 
     if (!base || !base.startsWith('/')) {
-        error("❌ Carpeta base de JBoss no válida: '${base}'. Definir la propiedad de carpeta JBOSS_TEMP_PATH (ruta absoluta, ej. /opt) en la carpeta de Jenkins.")
+        error("[ERROR]: ❌ Carpeta base de JBoss no válida: '${base}'. Definir la propiedad de carpeta JBOSS_TEMP_PATH (ruta absoluta, ej. /opt) en la carpeta de Jenkins.")
     }
     if (!component || component.contains('/') || component.contains('..') || component.contains(' ')) {
-        error("❌ component_name no es válido para la carpeta temporal: '${component}'.")
+        error("[ERROR]: ❌ component_name no es válido para la carpeta temporal: '${component}'.")
     }
 
     return "${base}/${component}"

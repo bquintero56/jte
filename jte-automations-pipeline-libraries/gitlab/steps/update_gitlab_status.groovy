@@ -4,17 +4,17 @@
 void call(String name, String state) {
     def commit = env.GITLAB_STATUS_COMMIT ?: ''
     if (!commit) {
-        echo "GitLab estado: '${name}' → ${state} omitido (todavía no hay commit clonado)"
+        println("[INFO]: GitLab estado: '${name}' → ${state} omitido (todavía no hay commit clonado)")
         return
     }
     try {
-        echo "GitLab estado: '${name}' → ${state} (commit ${commit.length() > 8 ? commit.substring(0, 8) : commit})"
+        println("[INFO]: GitLab estado: '${name}' → ${state} (commit ${commit.length() > 8 ? commit.substring(0, 8) : commit})")
         updateGitlabCommitStatus(name: name, state: state)
     }
     catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
         throw e
     }
     catch (Exception e) {
-        echo "⚠️ No se pudo informar a GitLab '${name}' → ${state}: ${e.message ?: e.toString()}"
+        println("[WARN]: ⚠️ No se pudo informar a GitLab '${name}' → ${state}: ${e.message ?: e.toString()}")
     }
 }

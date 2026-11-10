@@ -18,7 +18,7 @@ void call(Boolean run_test = null) {
                 withMaven(globalMavenSettingsConfig: config.settings_config, jdk: jdk_version, maven: mvn_version, options: mvn_opts, traceability: false) {
                     test.codeUnitTest()
                 }
-                echo '✅ Pruebas unitarias OK'
+                println('[INFO]: ✅ Pruebas unitarias OK')
             }
             else {
                 unstable('[WARN]: Unit tests disabled on pipeline configuration.')
