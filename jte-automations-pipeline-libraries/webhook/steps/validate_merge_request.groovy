@@ -53,17 +53,7 @@ void close_invalid_merge_request(String reason) {
 
     println("[INFO]: Comentando y cerrando el MR !${mr_iid} (proyecto ${project_id})")
 
-    // GITLAB_API_TOKEN: nombre de la variable donde Jenkins pone el VALOR de la credencial Secret text mientras dura el bloque
-    // (enmascarada en el log como ****). No es otra credencial.
     withCredentials([string(credentialsId: credential_id, variable: 'GITLAB_API_TOKEN')]) {
-        // Diagnóstico: a quién pertenece el token y qué scopes tiene (sin mostrar el token)
-        withEnv(["GITLAB_SERVER=${server}"]) {
-            sh(script: '''#!/bin/sh
-info=$(curl -sS -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" "$GITLAB_SERVER/api/v4/personal_access_tokens/self" 2>&1)
-echo "[INFO]: Token usado (personal_access_tokens/self): $info" | sed -E 's/"token":"[^"]*"/"token":"***"/'
-''', returnStatus: true)
-        }
-
         withEnv(["MR_API=${api}", "MR_COMMENT=${comment}"]) {
             // Token como variable del SHELL (\$...): no se interpola en Groovy ni queda en el log
             // Si GitLab responde >= 400, muestra el código HTTP y su mensaje (sin el token) para diagnosticar
