@@ -1,5 +1,5 @@
 // CD (despliegue) del servidor jboss-ui de la aplicación app1 en dev — job 'pais/jboss/app1/dev/jboss-ui-deployment'.
-// Nomenclatura: servers/<app>/<ambiente>/<servidor>-deployment-config.groovy (una config por servidor JBoss).
+// Nomenclatura: jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy (una config por servidor JBoss).
 // Config del SERVIDOR (no del micro): el micro llega por parámetros COMPONENT_NAME / COMPONENT_PACKAGING desde el CI.
 // Repo público: valores de ejemplo; los reales solo en la copia de Jenkins.
 jte {

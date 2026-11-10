@@ -186,7 +186,8 @@ Un template por job/rama en `jte-pipelines-template/jboss-integration/`: `defaul
 `dev_`, `qa_`, `uat_`, `main_integration`. Flujo: checkout → build Maven → carpeta temporal en el servidor → copia del artefacto →
 dispara el job de CD (`jboss-deployment`, por crear) y lo espera → borra la carpeta temporal. Se agregan las etapas una por una y el
 usuario prueba cada una antes de pasar a la siguiente (probado: checkout en default, dev, qa y uat; build Maven; carpeta temporal en JBoss).
-Configs por micro: archivos sueltos `jte-pipeline-configurations-automations/jboss/<micro>/<rama>-integration-config.groovy`
+Configs separadas: `jboss-micro/` (CI, una carpeta por micro) y `jboss-server/` (CD, una config por servidor JBoss).
+Configs por micro: archivos sueltos `jte-pipeline-configurations-automations/jboss-micro/<micro>/<rama>-integration-config.groovy`
 (default, dev, qa, uat; main pendiente). Cada job de Jenkins apunta a su archivo con la ruta de config del job (*Pipeline Configuration
 from SCM*), no con un Base Directory + `pipeline_config.groovy`.
 Librería `gitlab` (sin campos; `gitlab { }` vacío en la config): `checkout_code(rama_por_defecto)` clona `<GITLAB_URL>/<JOB_NAME sin el
@@ -216,7 +217,7 @@ parámetros, wait)` lanza cada job de CD (COMPONENT_NAME, COMPONENT_PACKAGING) c
 UNSTABLE → amarillo y sigue, otro → detiene. Pendiente: `remove_temporary_folder` (en el finally).
 CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librería `jboss_cd`
 (`host_deploy` String: un host por config, `path`, `user` opcional) y una config por servidor JBoss:
-`jboss/servers/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss/<app>/<ambiente>/<servidor>-deployment`
+`jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss/<app>/<ambiente>/<servidor>-deployment`
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,
 get_deployment_info, publish_artifact_to_nexus). Hosts/usuario reales solo en Jenkins.
