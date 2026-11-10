@@ -1,9 +1,13 @@
 // Despliega en el JBoss del servidor (config.host_deploy) el artefacto que dejó el CI en <JBOSS_TEMP_PATH>/<COMPONENT_NAME>.
 //   Artefacto : único *.<component_packaging> en la carpeta temporal DEL SERVIDOR (jboss-cli corre en el servidor, ruta absoluta)
-//   Modo      : STANDALONE → jboss-cli deploy <archivo>  (para domain usar la librería jboss_cd_domain)
+//   Modo      : STANDALONE (para domain usar la librería jboss_cd_domain)
+//   Comando   : deploy <archivo> --name=<COMPONENT_NAME>.<packaging> --runtime-name=<COMPONENT_NAME>.<packaging> --force
+//     --name         : nombre FIJO del deployment (aunque el archivo traiga versión): info, undeploy y verify siempre lo encuentran
+//     --runtime-name : nombre con que corre; define el context root (URL) si el .war no lo trae, así la URL no cambia
+//     --force        : si ya existe lo REEMPLAZA (full-replace-deployment, lo recomendado por JBoss); si no, lo crea
 //   jboss-cli : <jboss_home>/bin/jboss-cli.sh (default /opt/jboss-eap), credencial config.cli_credentials_id (default 'jboss-cli')
 //   SSH       : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
-// Si el componente ya estaba desplegado, antes debe correr undeploy_component (si no, JBoss rechaza el deploy por duplicado).
+// Con --force no hace falta undeploy previo para actualizar.
 // Devuelve true si desplegó y false si fue simulación (dry_run): el template solo verifica si devolvió true.
 Boolean call(String component_name, String component_packaging) {
     def host           = String.valueOf(config.host_deploy ?: '').trim()
@@ -46,7 +50,8 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
     def artifact = found
 
     // 2. Deploy con jboss-cli (ruta absoluta del archivo en el servidor)
-    def cli_command = "deploy ${artifact}"
+    def deployment_name = "${name}.${packaging}"
+    def cli_command     = "deploy ${artifact} --name=${deployment_name} --runtime-name=${deployment_name} --force"
 
     // Simulación (config.dry_run = true): muestra el comando y NO toca JBoss
     if (config.dry_run == true) {
@@ -55,7 +60,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
         return false
     }
 
-    println("[INFO]: Desplegando ${artifact} en JBoss standalone (${host})")
+    println("[INFO]: Desplegando ${artifact} como '${deployment_name}' en JBoss standalone (${host}); si ya existe se reemplaza (--force)")
 
     def status_code = 0
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -71,6 +76,6 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_
         error("[ERROR]: ❌ Falló el deploy de ${artifact} en ${host} (código ${status_code}). Ver la salida de jboss-cli arriba.")
     }
 
-    println("[INFO]: ✅ ${artifact} desplegado en JBoss (${host})")
+    println("[INFO]: ✅ '${deployment_name}' desplegado en JBoss (${host})")
     return true
 }

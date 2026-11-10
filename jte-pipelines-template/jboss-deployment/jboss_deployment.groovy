@@ -1,6 +1,6 @@
 // CD de componentes JBoss: lo lanza el CI del micro (trigger_jboss_deploy_job) con COMPONENT_NAME y COMPONENT_PACKAGING.
 // Un job por servidor JBoss (ej. pais/jboss-server/app1/dev/jboss-ui-deployment), con la config del SERVIDOR.
-// Flujo: deployment info → undeploy (solo si ya existe; PENDIENTE) → deploy → verify. Standalone o domain según la librería que carga la config del servidor
+// Flujo: deployment info → deploy (--force: si ya existe lo reemplaza, sin undeploy previo) → verify. Standalone o domain según la librería que carga la config del servidor
 // (jboss_cd_standalone o jboss_cd_domain: mismos nombres de steps).
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
@@ -25,15 +25,6 @@ timeout(time: execution.time, unit: execution.units) {
 
                 stage('JBoss: deployment info') {
                     deployment_info = get_deployment_info(params.COMPONENT_NAME)
-                }
-
-                stage('JBoss: undeploy component') {
-                    if (deployment_info.exists) {
-                        // PENDIENTE: undeploy_component(params.COMPONENT_NAME). Sin undeploy, un deploy real fallaría por duplicado.
-                        println("[WARN]: ⚠️ '${deployment_info.name}' ya existe (ENABLED=${deployment_info.enabled}, STATUS=${deployment_info.status}): el undeploy todavía no está implementado")
-                    } else {
-                        println("[INFO]: '${params.COMPONENT_NAME}' no está desplegado: no hace falta undeploy")
-                    }
                 }
 
                 stage('JBoss: deploy component') {

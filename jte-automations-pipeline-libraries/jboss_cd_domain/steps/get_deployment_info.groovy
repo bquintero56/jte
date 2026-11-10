@@ -7,7 +7,7 @@
 //   NAME           RUNTIME-NAME   PERSISTENT ENABLED STATUS
 //   Test-Java.war  Test-Java.war  true       false   STOPPED
 // Devuelve un mapa:
-//   exists  : true si hay un deployment cuyo nombre empieza con el componente (aunque esté detenido)
+//   exists  : true si hay un deployment <componente>.<empaquetado> (aunque esté detenido)
 //   name    : nombre del deployment (ej. 'Test-Java.war'), '' si no existe
 //   enabled : true si ENABLED = true
 //   status  : STATUS (OK, STOPPED, FAILED...), '' si no existe
@@ -59,7 +59,8 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_
     def lines = output.split('\n')
     for (int i = 0; i < lines.length; i++) {
         def columns = lines[i].trim().split(/\s+/)
-        if (columns[0].startsWith(component_name)) {
+        // Nombre exacto: <componente>.<empaquetado> (ej. Test-Java.war); no confunde Test-Java con Test-Java-Admin.war
+        if (columns[0].startsWith(component_name + '.')) {
             info.exists  = true
             info.name    = columns[0]
             info.enabled = columns.length > 3 && columns[3] == 'true'

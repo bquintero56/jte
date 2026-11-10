@@ -223,9 +223,10 @@ CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros
 `<jboss_home>/bin/jboss-cli.sh --connect --command="deployment-info --name=<componente>*"` (jboss_home default `/opt/jboss-eap`, credencial
 `cli_credentials_id` default `jboss-cli`, clave como variable del shell) y devuelve [exists, name, enabled, status, running] (columnas NAME RUNTIME-NAME PERSISTENT ENABLED STATUS; `running` =
 ENABLED true y STATUS OK; `true false STOPPED` = existe pero detenido); error de conexión/autenticación → ❌. Es una etapa visible del template del CD
-(`JBoss: deployment info`); flujo del CD: deployment info → undeploy (si ya existe; PENDIENTE, hoy se detiene) → `deploy_component(nombre, empaquetado)` →
+(`JBoss: deployment info`); flujo del CD: deployment info → `deploy_component(nombre, empaquetado)` →
 verify (`get_deployment_info` otra vez). Verify exige `running`. `jboss_cd_standalone.dry_run = true` → SIMULACIÓN: deploy solo muestra el
-comando y verify se omite. Undeploy pendiente: hoy solo avisa si ya existe. Deploy: `jboss-cli --command='deploy <JBOSS_TEMP_PATH>/<componente>/<archivo>'` con ruta absoluta en el
+comando y verify se omite. `undeploy_component` (pendiente) queda para retirar/rollback, no para actualizar. Deploy: `jboss-cli --command='deploy <JBOSS_TEMP_PATH>/<componente>/<archivo> --name=<comp>.<pkg>
+--runtime-name=<comp>.<pkg> --force'` (nombre fijo; --force reemplaza si ya existe, sin undeploy previo) con ruta absoluta en el
 servidor (sin `cd`); un solo template para standalone y domain; DOS librerías con los mismos steps:
 `jboss_cd_standalone` y `jboss_cd_domain` (`server_groups` obligatorio → `--server-groups=g1,g2`); la config del servidor carga una sola y una config por servidor JBoss:
 `jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss-server/<app>/<ambiente>/<servidor>-deployment`
