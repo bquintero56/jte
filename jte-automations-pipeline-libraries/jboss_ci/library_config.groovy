@@ -1,8 +1,8 @@
 // Librería jboss_ci (lado CI, config del MICRO): carpeta temporal en los servidores JBoss, copia del artefacto y disparo del job de CD.
 // El despliegue lo hace el job de CD con la librería jboss_cd (config del SERVIDOR: path, host_deploy, user...).
-// Conexión: ssh <usuario>@<host> con la llave SSH que ya tiene el nodo de Jenkins (sin credentialsId).
-// Usuario y carpeta base: propiedades de carpeta JBOSS_SSH_USER y JBOSS_TEMP_PATH (globales en Jenkins, no van en el repo;
-// el job de CD lee las mismas). user / path en la config solo para excepciones.
+// Conexión: ssh <JBOSS_SSH_USER>@<host> "sudo -n -u <JBOSS_RUN_AS_USER> <comando>" con la llave SSH del nodo (sin credentialsId).
+// Usuarios y carpeta base: propiedades de carpeta JBOSS_SSH_USER, JBOSS_RUN_AS_USER y JBOSS_TEMP_PATH (globales en Jenkins, no van
+// en el repo; el job de CD lee las mismas). user / run_as_user / path en la config solo para excepciones.
 // component_name / component_packaging: si no van en este bloque se toman de los keywords de la config.
 // Repo público: en la config del repo van valores de ejemplo; los reales solo en la copia de Jenkins.
 fields {
@@ -11,6 +11,7 @@ fields {
     }
     optional {
         user                        = String    // solo si este micro usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
+        run_as_user                 = String    // solo si este micro usa otro usuario de JBoss (por defecto: propiedad de carpeta JBOSS_RUN_AS_USER)
         path                        = String    // solo si este micro usa otra carpeta base (por defecto: propiedad de carpeta JBOSS_TEMP_PATH)
         component_packaging         = String    // war, ear, jar...
         component_name              = String    // nombre del componente (carpeta temporal y artefacto)
