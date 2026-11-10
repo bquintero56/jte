@@ -213,7 +213,11 @@ Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en defau
 como excepción), la misma que leerá el CD; `jboss_temporary_path()` valida la ruta antes del `rm -rf`. `copy_artifact_on_server` copia
 el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. `trigger_jboss_deploy_job(<amb>.deployment_project,
 parámetros, wait)` lanza cada job de CD (COMPONENT_NAME, COMPONENT_PACKAGING) con `propagate: false` y revisa el resultado: SUCCESS sigue,
-UNSTABLE → amarillo y sigue, otro → detiene. Pendiente: `remove_temporary_folder` (en el finally). Hosts/usuario reales solo en Jenkins.
+UNSTABLE → amarillo y sigue, otro → detiene. Pendiente: `remove_temporary_folder` (en el finally).
+CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librería `jboss_cd`
+(`host_deploy`, `path`, `user` opcional) y config por servidor en `jboss/servers/<app>/<rama>-deployment-config.groovy`. PRUEBA: hoy
+`deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,
+get_deployment_info, publish_artifact_to_nexus). Hosts/usuario reales solo en Jenkins.
 El job de CD (uno por servidor/aplicación, ej. `pais/jboss/app1/dev-deployment`) tendrá su propia config del SERVIDOR y la librería
 `jboss_cd` (`path`, `host_deploy`, `user`...). Nombres con guion bajo: `jboss-ci { }` no es válido en el DSL de JTE.
 
