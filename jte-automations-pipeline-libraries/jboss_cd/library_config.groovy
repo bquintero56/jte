@@ -9,6 +9,8 @@ fields {
         host_deploy = String    // host del servidor JBoss donde se despliega (uno por config)
     }
     optional {
-        user        = String    // solo si este servidor usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
+        user               = String    // solo si este servidor usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
+        jboss_home         = String    // ruta de JBoss en el servidor (default '/opt/jboss-eap')
+        cli_credentials_id = String    // credencial Username with password del usuario de administración de JBoss (default 'jboss-cli')
     }
 }

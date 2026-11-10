@@ -19,5 +19,10 @@ void call() {
     println("[INFO]: Carpeta del artefacto (misma del CI): ${temp_base ?: '<JBOSS_TEMP_PATH sin definir>'}/${component_name}/*.${component_packaging}")
     println("[INFO]: Host (deploy)       : ${config.host_deploy ?: '<host_deploy sin definir>'}")
     println("[INFO]: Usuario SSH         : ${ssh_user ?: '<JBOSS_SSH_USER sin definir>'}")
+
+    // Prueba de get_deployment_info: ¿el componente ya está desplegado en este JBoss?
+    def deployed = get_deployment_info(component_name)
+    println("[INFO]: ¿Desplegado actualmente? : ${deployed}")
+
     println("[INFO]: ✅ Job de CD recibió los datos correctamente")
 }
