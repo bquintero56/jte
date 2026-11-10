@@ -1,8 +1,9 @@
 // Validador de Merge Requests de GitLab (job aparte del orquestador de pushes).
 // Se dispara con cada MR abierto o actualizado de cualquier repo del grupo y valida la promoción de ramas:
-//   rama de trabajo → dev → qa → uat → main (sin excepciones). Informa el estado "Validación de promoción" al MR;
-//   con "Pipelines must succeed" activo en el repo, un ❌ bloquea el botón Merge. No lanza ningún otro job.
+//   rama de trabajo → dev → qa → uat → main (sin excepciones). Si el MR NO es válido lo COMENTA y lo CIERRA (API de GitLab).
+//   No lanza ningún otro job. No usa estados de commit (no bloquean: se pisan con el pipeline de la rama).
 // URL del webhook en GitLab (solo "Merge request events"): la que muestra el trigger de este job → https://<jenkins>/project/<ruta-del-job>
+
 timeout(time: execution.time, unit: execution.units) {
 
     node(jenkins_agent_label) {
@@ -14,7 +15,6 @@ timeout(time: execution.time, unit: execution.units) {
                                                       usernameVariable: 'GITLAB_WEBHOOK_USER',
                                                       passwordVariable: 'GITLAB_WEBHOOK_TOKEN')]) {
                         properties([
-                            gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie'),
                             pipelineTriggers([
                                 gitlab(
                                     triggerOnPush                 : false,     // los pushes los maneja push_orchestrator

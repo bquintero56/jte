@@ -1,45 +1,71 @@
-// Valida la promoción de ramas de un Merge Request y le informa el resultado a GitLab (estado "Validación de promoción").
-// Con "Pipelines must succeed" activo en el repo, un ❌ bloquea el botón Merge del MR.
+// Valida la promoción de ramas de un Merge Request. Si NO es válida, COMENTA el motivo en el MR y lo CIERRA (API de GitLab).
+// No usa estados de commit: el commit de origen lo comparten todos los MR y los pipelines de la rama, así que un estado
+// "failed" se pisa con el siguiente pipeline y no bloquea el merge. Cerrar el MR sí lo impide.
 // Flujo estándar, sin excepciones (no se permiten hotfix):
 //   dev  ← cualquier rama (es la rama inicial del flujo)
 //   qa   ← solo dev
 //   uat  ← solo qa
 //   main ← solo uat
 //   otro destino → sin regla: ✅
+// API de GitLab: <GITLAB_URL>/api/v4 (propiedad de carpeta) con un token de permiso api guardado en Jenkins como "Secret text"
+//   (config.api_token_credential, default 'gitlab-api-token'). Datos del MR: gitlabMergeRequestTargetProjectId / gitlabMergeRequestIid.
 // Librería webhook. Lo llama el pipeline merge_request_validator (job aparte del orquestador de pushes) en cada MR abierto o actualizado.
 void call(String source_branch, String target_branch) {
-    def status_name     = 'Validación de promoción'
     def promotion_rules = ['qa': 'dev', 'uat': 'qa', 'main': 'uat']   // destino: único origen permitido (dev no tiene regla)
 
     def source = String.valueOf(source_branch ?: '').trim()
     def target = String.valueOf(target_branch ?: '').trim()
 
     stage('Webhook: validar promoción del MR') {
-        println("[INFO]: Merge Request: '${source}' → '${target}'")
-        updateGitlabCommitStatus(name: status_name, state: 'running')
+        println("[INFO]: Merge Request !${env.gitlabMergeRequestIid}: '${source}' → '${target}'")
 
-        def valid   = true
-        def message = ''
-
-        if (promotion_rules.containsKey(target)) {
-            valid   = (source == promotion_rules[target])
-            message = valid ? "promoción válida: '${source}' → '${target}'"
-                            : "a '${target}' solo se llega desde '${promotion_rules[target]}', no desde '${source}'"
+        if (!promotion_rules.containsKey(target)) {
+            println("[INFO]: ✅ MR permitido: ${target == 'dev' ? "'dev' es la rama inicial: acepta cualquier rama" : "destino '${target}' sin regla de promoción"}")
+            return
         }
-        else if (target == 'dev') {
-            message = "'${source}' → 'dev' (dev es la rama inicial: acepta cualquier rama)"
-        }
-        else {
-            message = "destino '${target}' sin regla de promoción"
+        if (source == promotion_rules[target]) {
+            println("[INFO]: ✅ MR permitido: promoción válida '${source}' → '${target}'")
+            return
         }
 
-        if (valid) {
-            updateGitlabCommitStatus(name: status_name, state: 'success')
-            println("[INFO]: ✅ MR permitido: ${message}")
-        }
-        else {
-            updateGitlabCommitStatus(name: status_name, state: 'failed')
-            error("[ERROR]: ❌ MR rechazado: ${message}. Flujo: rama de trabajo → dev → qa → uat → main.")
+        // Promoción NO válida: comentar y cerrar el MR
+        def reason = "a '${target}' solo se llega desde '${promotion_rules[target]}', no desde '${source}'"
+        close_invalid_merge_request(reason)
+        error("[ERROR]: ❌ MR !${env.gitlabMergeRequestIid} rechazado y CERRADO: ${reason}. Flujo: dev → qa → uat → main.")
+    }
+}
+
+// Comenta el motivo en el MR y lo cierra con la API de GitLab.
+void close_invalid_merge_request(String reason) {
+    def server        = String.valueOf(env.GITLAB_URL ?: '').trim().replaceFirst(/\/+$/, '')
+    def project_id    = String.valueOf(env.gitlabMergeRequestTargetProjectId ?: '').trim()
+    def mr_iid        = String.valueOf(env.gitlabMergeRequestIid ?: '').trim()
+    def credential_id = String.valueOf(config.api_token_credential ?: 'gitlab-api-token').trim()
+
+    if (!server || !project_id || !mr_iid) {
+        error("[ERROR]: ❌ No se puede cerrar el MR: falta GITLAB_URL (propiedad de carpeta) o los datos del MR del webhook (proyecto '${project_id}', MR '${mr_iid}').")
+    }
+
+    def api     = "${server}/api/v4/projects/${project_id}/merge_requests/${mr_iid}"
+    def comment = "❌ **Merge Request cerrado automáticamente por Jenkins**: ${reason}.\n\n" +
+                  "El flujo de promoción es **rama de trabajo → dev → qa → uat → main**, sin excepciones. " +
+                  "Crea el MR desde la rama correcta."
+
+    println("[INFO]: Comentando y cerrando el MR !${mr_iid} (proyecto ${project_id})")
+
+    withCredentials([string(credentialsId: credential_id, variable: 'GITLAB_API_TOKEN')]) {
+        withEnv(["MR_API=${api}", "MR_COMMENT=${comment}"]) {
+            // Token como variable del SHELL (\$...): no se interpola en Groovy ni queda en el log
+            def status_code = sh(script: '''#!/bin/sh
+set -e
+curl -sS -f -o /dev/null -X POST -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --data-urlencode "body=$MR_COMMENT" "$MR_API/notes"
+curl -sS -f -o /dev/null -X PUT  -H "PRIVATE-TOKEN: $GITLAB_API_TOKEN" --data "state_event=close" "$MR_API"
+''', returnStatus: true)
+
+            if (status_code != 0) {
+                error("[ERROR]: ❌ No se pudo comentar/cerrar el MR !${mr_iid} con la API de GitLab (código ${status_code}). Revisar el token '${credential_id}' (permiso api, rol Developer o superior) y GITLAB_URL.")
+            }
         }
     }
+    println("[INFO]: ✅ MR !${mr_iid} comentado y cerrado")
 }
