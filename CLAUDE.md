@@ -173,6 +173,8 @@ webhook (push) de **todos** los proyectos de GitLab con el **GitLab Plugin** (tr
 declarado en el template con `properties`, Secret token = password de la credencial *Username with password* `webhook_token_credential`; URL `https://<jenkins>/project/<job>`).
 Variables: `branch_name` = `gitlabSourceBranch`; `repository_name` y `appcode` = último y penúltimo segmento de `gitlabSourceRepoHttpUrl`.
 No se usa Generic Webhook Trigger.
+**Ojo:** la URL del webhook incluye la carpeta y el nombre del job (`/project/<carpeta>/<job>`): si se renombra o se mueve el job en
+Jenkins, hay que actualizar la URL en el webhook de GitLab (si no, GitLab recibe 404 y el job no se ejecuta). Ya pasó con el orquestador.
 En GitLab los repos están en `mexico/<appcode>/<repo>` (grupo `mexico`, subgrupo = appcode).
 El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` lanza `mexico/<appcode>/<repo>/<rama>` si la rama es
 de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
