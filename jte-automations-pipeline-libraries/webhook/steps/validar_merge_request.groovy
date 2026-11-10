@@ -6,7 +6,7 @@
 //   uat  ← solo qa
 //   main ← solo uat
 //   otro destino → sin regla: ✅
-// Lo llama el pipeline merge_request_validator (job aparte del orquestador de pushes) en cada MR abierto o actualizado.
+// Librería webhook. Lo llama el pipeline merge_request_validator (job aparte del orquestador de pushes) en cada MR abierto o actualizado.
 void call(String source_branch, String target_branch) {
     def status_name     = 'Validación de promoción'
     def env_branches    = ['dev', 'qa', 'uat', 'main']

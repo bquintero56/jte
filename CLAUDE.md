@@ -180,7 +180,7 @@ Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en
 Archivos: config `jte-pipeline-configurations-automations/webhook`, librería `jte-automations-pipeline-libraries/webhook`,
 template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 Promoción de ramas (sin hotfix, sin excepciones): rama de trabajo → dev → qa → uat → main. Un job APARTE del orquestador, `merge_request_validator`
-(template `webhook/merge_request_validator.groovy`, config `merge-request-validator/pipeline_config.groovy`, librería `merge_request`),
+(template `webhook/merge_request_validator.groovy`, config `merge-request-validator/pipeline_config.groovy`, step `validar_merge_request` de la librería `webhook`),
 escucha solo **Merge Requests** (abiertos/actualizados) y `validar_merge_request(origen, destino)` informa el estado "Validación de promoción"
 al MR (qa ← solo dev, uat ← solo qa, main ← solo uat, dev ← ramas de trabajo). En cada repo de GitLab (EE 19.3.6): ramas `dev/qa/uat/main`
 protegidas (push: No one) y *Pipelines must succeed* → un ❌ bloquea el merge. Pendiente capa 2: validar en qa/uat/main antes de desplegar
