@@ -1,9 +1,14 @@
 // Crea (o recrea vacía) la carpeta temporal <JBOSS_TEMP_PATH>/<component_name> en cada servidor JBoss del ambiente.
 // Si falla en un servidor, detiene el pipeline (no se sigue con los demás).
-// Conexión: ssh <jboss_ssh_user()>@<host> con la llave del nodo de Jenkins.
+// Conexión: ssh <JBOSS_SSH_USER>@<host> con la llave del nodo de Jenkins.
 void call() {
     def component_full_path = jboss_temporary_path()
-    def ssh_user            = jboss_ssh_user()
+
+    // Usuario SSH: config.user (excepción por micro) o la propiedad de carpeta JBOSS_SSH_USER
+    def ssh_user = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
+    if (!ssh_user) {
+        error('❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER en la carpeta de Jenkins (o jboss_ci.user en la config).')
+    }
 
     // config.host como lista, aunque venga un solo host como String
     def host_list = config.host instanceof String ? [config.host] : config.host
