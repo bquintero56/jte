@@ -1,7 +1,7 @@
 // Valida la promoción de ramas de un Merge Request y le informa el resultado a GitLab (estado "Validación de promoción").
 // Con "Pipelines must succeed" activo en el repo, un ❌ bloquea el botón Merge del MR.
 // Flujo estándar, sin excepciones (no se permiten hotfix):
-//   dev  ← cualquier rama de trabajo (feature/*, fix/*...), nunca qa / uat / main
+//   dev  ← cualquier rama (es la rama inicial del flujo)
 //   qa   ← solo dev
 //   uat  ← solo qa
 //   main ← solo uat
@@ -9,8 +9,7 @@
 // Librería webhook. Lo llama el pipeline merge_request_validator (job aparte del orquestador de pushes) en cada MR abierto o actualizado.
 void call(String source_branch, String target_branch) {
     def status_name     = 'Validación de promoción'
-    def env_branches    = ['dev', 'qa', 'uat', 'main']
-    def promotion_rules = ['qa': 'dev', 'uat': 'qa', 'main': 'uat']   // destino: único origen permitido
+    def promotion_rules = ['qa': 'dev', 'uat': 'qa', 'main': 'uat']   // destino: único origen permitido (dev no tiene regla)
 
     def source = String.valueOf(source_branch ?: '').trim()
     def target = String.valueOf(target_branch ?: '').trim()
@@ -28,9 +27,7 @@ void call(String source_branch, String target_branch) {
                             : "a '${target}' solo se llega desde '${promotion_rules[target]}', no desde '${source}'"
         }
         else if (target == 'dev') {
-            valid   = !(source in env_branches)
-            message = valid ? "rama de trabajo '${source}' → 'dev'"
-                            : "a 'dev' solo llegan ramas de trabajo (feature/*, fix/*...), no '${source}'"
+            message = "'${source}' → 'dev' (dev es la rama inicial: acepta cualquier rama)"
         }
         else {
             message = "destino '${target}' sin regla de promoción"
