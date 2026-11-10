@@ -4,6 +4,7 @@
 // Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit (conexión GitLab en properties).
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
+// PRUEBAS: por ahora dev solo hace checkout → build → carpeta temporal (sin compile, unit test ni checkstyle).
 properties([
     buildDiscarder(logRotator(numToKeepStr: log_rotator)),
     disableConcurrentBuilds(),
@@ -28,18 +29,6 @@ timeout(time: execution.time, unit: execution.units) {
             try {
                 gitlab_stage('GitLab: checkout') {
                     checkout_code(dev.short_name)
-                }
-
-                gitlab_stage('Maven: compile code') {
-                    compile_code()
-                }
-
-                gitlab_stage('Maven: unit test') {
-                    run_unit_test()
-                }
-
-                gitlab_stage('Maven: checkstyle') {
-                    check_code_styles()
                 }
 
                 gitlab_stage('Maven: build binary') {
