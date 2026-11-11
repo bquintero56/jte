@@ -4,8 +4,8 @@ import jte.maven.lifecycle.DependencyScan
 // Busca dependencias vulnerables (directas o transitivas) con mvn dependency:tree dentro de withMaven. El stage lo pone el template.
 // Reglas: resources/dependency-scan/vulnerable-dependencies.txt (groupId:artifactId | versiones | CVE | descripción).
 //   -Dincludes se arma con esas reglas, así que el árbol solo muestra esas librerías; luego se busca cada versión en la salida.
-// Si encuentra alguna: lista cada una con su CVE, borra su carpeta de la caché local de Maven (para que otro build no use el
-//   artefacto cacheado) y DETIENE el pipeline (FAILURE).
+// Si encuentra alguna: lista cada una con su CVE y DETIENE el pipeline (FAILURE). No toca la caché de Maven (repositorio local
+//   compartido del nodo): si el micro sigue declarando la versión, el siguiente build la vuelve a detectar.
 // Si mvn dependency:tree falla: [WARN] + UNSTABLE y el pipeline sigue (el escaneo se omite; revisar el pom.xml).
 //   JDK / Maven: config.jdk_version / config.mvn_version, o las propiedades de carpeta
 //                F_PIPELINE_JDK_TOOL_VERSION / F_PIPELINE_MAVEN_TOOL_VERSION
@@ -27,9 +27,6 @@ void call() {
                 def tree_output = scan.dependencyTree(rules.collect { it.ga })
                 vulnerabilities = find_vulnerabilities(rules, tree_output)
 
-                if (vulnerabilities) {
-                    clean_maven_cache(scan.localRepository(), vulnerabilities)
-                }
             }
         }
     }
@@ -60,33 +57,6 @@ void call() {
     }
 
     println('[INFO]: ✅ Escaneo de dependencias completado: no se encontraron dependencias vulnerables')
-}
-
-// Borra de la caché local de Maven la carpeta <repo>/<groupId con />/<artifactId>/ de cada librería vulnerable (una vez por librería).
-// No lanza error: si no se puede, avisa y el pipeline falla igual por las vulnerabilidades.
-void clean_maven_cache(String local_repo, List vulnerabilities) {
-    if (!local_repo) {
-        println('[WARN]: ⚠️ No se pudo obtener el repositorio local de Maven: no se limpió la caché de las librerías vulnerables.')
-        return
-    }
-
-    def cleaned = []
-    vulnerabilities.each { v ->
-        if (!cleaned.contains(v.ga)) {
-            cleaned << v.ga
-            def coordinates = v.ga.tokenize(':')
-            def cache_path  = "${local_repo}/${coordinates[0].replace('.', '/')}/${coordinates[1]}"
-
-            def status_code = sh(script: """#!/bin/sh
-rm -rf '${cache_path}'""", returnStatus: true)
-            if (status_code == 0) {
-                println("[INFO]: Caché de Maven limpiada: ${cache_path}")
-            }
-            else {
-                println("[WARN]: ⚠️ No se pudo borrar la caché ${cache_path}")
-            }
-        }
-    }
 }
 
 // Lee las reglas del archivo de recursos. Devuelve [[ga, versions, cve, desc], ...].

@@ -2,7 +2,6 @@
 # Una regla por línea:  groupId:artifactId | versiones separadas por coma | CVE | descripción
 #   Versión con * = comodín (ej. 1.2.* = toda la rama 1.2). Las líneas con # y las vacías se ignoran.
 #   Para agregar o quitar una librería o versión solo se edita este archivo: el -Dincludes del comando se arma con estas reglas.
-#   La caché que se borra si se encuentra una es <repositorio local de Maven>/<groupId con />/<artifactId>/.
 
 # Log4j 1.x (artifact ID legacy): todas las 1.2.x son vulnerables
 log4j:log4j | 1.2.* | CVE-2019-17571 | Log4j 1.x

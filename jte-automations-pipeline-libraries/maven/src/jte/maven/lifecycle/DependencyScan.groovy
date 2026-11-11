@@ -26,12 +26,4 @@ exit \$rc""", returnStatus: true)
         }
         return steps.readFile(MVN_LOG)
     }
-
-    // Ruta del repositorio local de Maven que usa este build (la de settings.xml / withMaven). '' si no se puede obtener.
-    String localRepository() {
-        def repo = steps.sh(script: '''#!/bin/sh
-mvn -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=settings.localRepository -DforceStdout 2>/dev/null''',
-                            returnStdout: true).trim()
-        return repo.startsWith('/') ? repo : ''
-    }
 }
