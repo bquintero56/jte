@@ -1,5 +1,5 @@
 // CI de componentes JBoss — job 'integration': cualquier rama que no sea dev, qa, uat, release o main (feature/*, bugfix/*...). La rama llega en BRANCH.
-// Flujo: checkout (GitLab) → checkstyle → compile → unit test → SonarQube (scan + quality gate) → build. Solo valida: no despliega.
+// Flujo: checkout (GitLab) → checkstyle → dependency scan (librerías vulnerables) → compile → unit test → SonarQube (scan + quality gate) → build. Solo valida: no despliega.
 // Cada etapa (gitlab_stage) informa su estado en GitLab junto al commit (conexión GitLab en properties).
 // Los 5 templates (default, dev, qa, uat, main) son casi iguales: cada uno agrega o quita etapas según el ambiente.
 // Se van agregando las etapas a medida que se prueban.
@@ -31,6 +31,10 @@ timeout(time: execution.time, unit: execution.units) {
 
                 gitlab_stage('Maven: checkstyle') {
                     check_code_styles()
+                }
+
+                gitlab_stage('Maven: dependency scan') {
+                    scan_vulnerable_dependencies()
                 }
 
                 gitlab_stage('Maven: compile code') {

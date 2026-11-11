@@ -208,6 +208,12 @@ Checkstyle suppressions (mixto): `maven/resources/checkstyle/checkstyle-suppress
 `maven/resources/checkstyle/<component_name>/checkstyle-suppressions.xml`. `check_code_styles` lo escribe en el workspace y pasa
 `-Dcheckstyle.suppressions.location`. Reemplaza al `file_list` de la librería bitbucket (el `sonar-project.properties` se verá con Sonar).
 
+Escaneo de dependencias vulnerables: step `scan_vulnerable_dependencies` (librería `maven`, clase `DependencyScan`), en `default_integration`
+después del checkstyle. `mvn dependency:tree -Dincludes=<groupId:artifactId de las reglas>` dentro de withMaven; reglas en
+`maven/resources/dependency-scan/vulnerable-dependencies.txt` (`groupId:artifactId | versiones | CVE | descripción`, `*` comodín; lista
+migrada del pipeline original). Si encuentra alguna → lista con su CVE, borra `<repo local>/<grupo>/<artifactId>` (repo local con
+`help:evaluate settings.localRepository`) y FAILURE. Si dependency:tree falla → [WARN] + UNSTABLE y sigue.
+
 SonarQube (Community 9.9.8, sin ramas): librería `sonarqube` (`scan_code_quality`, `check_quality_gate`), solo en `default_integration`, después
 de los unit tests y antes del build. Scanner de Maven (`sonar-maven-plugin:3.11.0.3922`) dentro de
 `withSonarQubeEnv('Sonar_server_SCAN_SERVER')`; project key = `component_name` (= nombre del repo). Quality Gate con `waitForQualityGate`
