@@ -258,6 +258,15 @@ success/failed/canceled (UNSTABLE → success en GitLab: no tiene "warning" y un
 (GitLab connection de System, credencial GitLab API token `api`) en `properties([...])` de cada template (no se marca
 en la pantalla del job: `properties()` lo reemplazaría). No se usa propiedad de carpeta para la conexión.
 
+## 5.3 Mantenimiento de nodos (`jenkins-maintenance/`, fuera de JTE)
+
+Scripts para pegar en un job *Pipeline script* normal (el usuario no tiene SSH a los nodos: se arregla con el usuario del agente).
+`fix_jdk_tzdb.groovy` (parámetros NODE_LABEL, JDK_HOME, APPLY_FIX): el JDK 8 de las tools (`jdk-1.8.0.412`, tar.gz de Red Hat en Nexus,
+instalación automática "Extraer *.zip/*.tar.gz") trae `jre/lib/tzdb.dat` como enlace a `/usr/share/javazi-1.8/tzdb.dat` (paquete
+`tzdata-java`, ausente en los nodos) → Maven falla con `FileNotFoundException ... tzdb.dat`. El script diagnostica (usuario, permisos,
+enlaces rotos) y con APPLY_FIX copia `tzdb.dat.upstream` sobre el enlace roto. Definitivo: corregir el tar.gz en Nexus (en Linux, no en
+Windows: se pierden permisos y enlaces). El aviso `jansi ... noexec` de Maven (`/tmp` noexec) es inofensivo.
+
 ## 6. Cómo probar
 
 - No hay Jenkins en el entorno de desarrollo: revisar la sintaxis con cuidado y explicar cómo probar cada cambio.

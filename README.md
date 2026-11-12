@@ -89,3 +89,28 @@ Nombres que el código espera encontrar **exactamente así**:
 
 > La URL del webhook incluye la carpeta y el nombre del job: si se renombra o se mueve un job en Jenkins, hay que actualizar la URL
 > en el webhook de GitLab.
+
+---
+
+## Mantenimiento de nodos
+
+Scripts de `jenkins-maintenance/`. No son JTE: se pegan en un job **Pipeline** normal (*Definition: Pipeline script*).
+
+### `fix_jdk_tzdb.groovy` — JDK 8 con `tzdb.dat` roto
+
+**Síntoma:** un micro que usa el JDK 8 falla al arrancar Maven con
+`java.io.FileNotFoundException: <JDK>/jre/lib/tzdb.dat (No such file or directory)`.
+
+**Causa:** en el JDK 8 de Red Hat, `tzdb.dat` es un enlace a `/usr/share/javazi-1.8/tzdb.dat` (paquete `tzdata-java`), que el nodo no
+tiene. El archivo original queda al lado como `tzdb.dat.upstream`.
+
+**Uso:**
+
+1. Crear un job *Pipeline*, pegar el contenido de `jenkins-maintenance/fix_jdk_tzdb.groovy` y guardarlo.
+2. Ejecutarlo una vez (falla pidiendo `NODE_LABEL`: esa ejecución solo registra los parámetros).
+3. *Build with Parameters* con el nodo en `NODE_LABEL` y `APPLY_FIX` **sin marcar**: solo diagnostica (usuario del agente, permisos,
+   enlaces rotos).
+4. Ejecutarlo de nuevo con `APPLY_FIX` **marcado**: reemplaza el enlace roto por una copia de `tzdb.dat.upstream` y verifica.
+
+Arregla un nodo por ejecución. La solución definitiva es corregir el archivo comprimido del JDK en Nexus (hacerlo en Linux: en
+Windows se pierden los permisos de ejecución y los enlaces).
