@@ -9,5 +9,6 @@ fields {
     optional {
         settings_config      = String     // Managed file con el settings.xml (default 'GLOBAL_MAVEN_SETTINGS')
         quality_gate_minutes = Integer    // tiempo máximo esperando el Quality Gate (default 5)
+        project_tags         = List       // tags extra del proyecto en SonarQube (el país, primera carpeta del job, siempre va)
     }
 }

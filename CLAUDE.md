@@ -218,6 +218,9 @@ SonarQube (Community 9.9.8, sin ramas): librería `sonarqube` (`scan_code_qualit
 de los unit tests y antes del build. Scanner de Maven (`sonar-maven-plugin:3.11.0.3922`) dentro de
 `withSonarQubeEnv('Sonar_server_SCAN_SERVER')`; project key = `component_name` (= nombre del repo). Quality Gate con `waitForQualityGate`
 vía webhook global de SonarQube a `https://<jenkins>/sonarqube-webhook/`; `enforce_quality_gates` decide FAILURE o UNSTABLE.
+Tags por país: `check_quality_gate`, después de `waitForQualityGate` (el proyecto ya existe), llama a `set_project_tags()` →
+`POST <SONAR_HOST_URL>/api/project_tags/set` con el token del servidor (`withSonarQubeEnv`; su usuario necesita 'Administer' en el
+proyecto, si no → 403, [WARN] + UNSTABLE). Tags = primera carpeta de JOB_NAME (país) + `sonarqube.project_tags` (List opcional); reemplaza los existentes.
 Propiedades del análisis centralizadas (los desarrolladores no las controlan): `sonarqube/resources/sonarqube/sonar-project.properties`
 general (o `.../<component_name>/sonar-project.properties`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
 no se definen; `sonar.*` en pom.xml, `.mvn/maven.config` / `.mvn/jvm.config` o un `sonar-project.properties` en el repo (lo ignora el

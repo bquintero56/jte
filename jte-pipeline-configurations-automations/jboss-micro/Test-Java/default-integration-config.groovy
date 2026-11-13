@@ -34,6 +34,7 @@ libraries {
     }
     sonarqube {
         enforce_quality_gates = true          // false: si no pasa el Quality Gate queda UNSTABLE y sigue
+        // project_tags = ['appcode']         // opcional: tags extra en SonarQube (el país, primera carpeta del job, va siempre)
     }
     // Se agrega al sumar sus etapas: jboss
 }
