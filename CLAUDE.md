@@ -222,8 +222,11 @@ Propiedades del análisis centralizadas (los desarrolladores no las controlan): 
 general (o `.../<component_name>/sonar-project.properties`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
 no se definen; `sonar.*` en pom.xml, `.mvn/maven.config` / `.mvn/jvm.config` o un `sonar-project.properties` en el repo (lo ignora el
 scanner de Maven) → aviso y UNSTABLE.
-Cobertura: la mide el pipeline (clase `Test`: `jacoco:prepare-agent test` a `target/jte-jacoco/jacoco.exec`, borra `target/site/jacoco` y
-genera `jacoco:report` solo desde ese exec). El jacoco-maven-plugin del micro no influye; si no se puede medir, Sonar muestra 0%.
+Cobertura: la mide el pipeline con UN solo agente (clase `Test`): `mvn clean` + `dependency:copy` del agente `org.jacoco.agent:0.8.12:runtime`
+a `target/jte-jacoco-agent`, luego `mvn test -Djacoco.skip=true -DargLine=-javaagent:<agente>=destfile=target/jte-jacoco/jacoco.exec`
+(`jacoco.skip` apaga el prepare-agent del pom del micro: con dos agentes la JVM de surefire se caía con exit 134), borra `target/site/jacoco`
+y genera `jacoco:report` solo desde ese exec. Si el pom fija `<argLine>` sin `${argLine}`/`@{argLine}`, o define otras opciones en la
+propiedad `argLine`, el `-DargLine` las reemplaza; si no se puede medir, Sonar muestra 0%.
 
 Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en default): `create_temporary_folder` crea
 `<JBOSS_TEMP_PATH>/<component_name>` en cada `jboss_ci.host` por `ssh -o BatchMode=yes <usuario>@<host>` (llave del nodo; usuario = propiedad de carpeta
