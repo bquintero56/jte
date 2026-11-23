@@ -57,7 +57,7 @@ String build_sonar_args(String project_key) {
     // Archivo del micro si existe; si no, el general.
     //   config.properties_path (ej. 'pais/Test/java', misma ruta que la config del micro en jboss-micro/) → resources/sonarqube/<ruta>/
     //   sin properties_path → resources/sonarqube/<component_name>/
-    def micro_path = String.valueOf(config.properties_path ?: project_key).trim().replaceAll(/^\/+|\/+$/, '')
+    def micro_path = String.valueOf(config.properties_path ?: project_key).trim().replaceAll('^/+', '').replaceAll('/+$', '')
     if (!(micro_path ==~ /[A-Za-z0-9._\/-]+/) || micro_path.split('/').contains('..')) {
         error("[ERROR]: ❌ sonarqube.properties_path no es una ruta válida: '${micro_path}' (ej. 'pais/Test/java', sin '..').")
     }
