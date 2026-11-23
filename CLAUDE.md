@@ -246,7 +246,9 @@ CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros
 `cli_credentials_id` default `jboss-cli`, clave como variable del shell); cada step imprime `[INFO]: Comando enviado: ...` con el comando exacto
 (usuario y clave como ***) y devuelve [exists, name, enabled, status, running] (columnas NAME RUNTIME-NAME PERSISTENT ENABLED STATUS; `running` =
 ENABLED true y STATUS OK; `true false STOPPED` = existe pero detenido); error de conexión/autenticación → ❌. Es una etapa visible del template del CD
-(`JBoss: deployment info`); flujo del CD: deployment info → `deploy_component(nombre, empaquetado)` →
+(`JBoss: deployment info`). `jboss_cd_standalone.get_deployments_runtime()` lista TODOS los deployments con
+`:read-children-resources(child-type=deployment,include-runtime=true)` (salida DMR) → lista de [name, runtime_name, enabled, persistent,
+status, running]; aún no está en el template. Flujo del CD: deployment info → `deploy_component(nombre, empaquetado)` →
 verify (`get_deployment_info` otra vez). Verify exige `running`. `jboss_cd_standalone.dry_run = true` → SIMULACIÓN: deploy solo muestra el
 comando y verify se omite. Antes del deploy, si `deployment_info.exists`, etapa `JBoss: undeploy component` →
 `undeploy_component(nombre, empaquetado)` (standalone: `undeploy <comp>.<pkg>`; domain: `--all-relevant-server-groups`). Deploy: `jboss-cli --command='deploy <JBOSS_TEMP_PATH>/<componente>/<archivo> --name=<comp>.<pkg>
