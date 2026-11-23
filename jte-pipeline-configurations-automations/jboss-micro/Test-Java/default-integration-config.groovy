@@ -35,6 +35,7 @@ libraries {
     sonarqube {
         enforce_quality_gates = true          // false: si no pasa el Quality Gate queda UNSTABLE y sigue
         // project_tags = ['appcode']         // opcional: tags extra en SonarQube (el país, primera carpeta del job, va siempre)
+        // properties_path = 'Test-Java'      // opcional: carpeta del sonar-project.properties propio en sonarqube/resources/sonarqube/ (misma ruta que esta config)
     }
     // Se agrega al sumar sus etapas: jboss
 }

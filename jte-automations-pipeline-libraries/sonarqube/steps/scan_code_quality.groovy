@@ -1,7 +1,8 @@
 // Analiza el código con el scanner de Maven y publica el análisis en SonarQube (Community 9.9: un análisis por proyecto, sin ramas).
 //   Servidor   : Sonar_server_SCAN_SERVER (withSonarQubeEnv inyecta URL y token configurados en Jenkins)
 //   Project key: component_name (keyword de la config) = nombre del repositorio
-//   Propiedades: resources/sonarqube/<component_name>/sonar-project.properties si existe; si no, el general
+//   Propiedades: resources/sonarqube/<properties_path>/sonar-project.properties (properties_path = misma ruta que la config del
+//                micro en jboss-micro/, ej. 'pais/Test/java'; sin properties_path se usa <component_name>) si existe; si no, el general
 //                resources/sonarqube/sonar-project.properties. Van como -D: le ganan al pom.xml del micro.
 //                Las propiedades que excluyen código se fuerzan siempre (vacías si el archivo no las define).
 //                Si el pom.xml declara propiedades sonar.*, se avisa en el log y el build queda UNSTABLE.
@@ -53,15 +54,23 @@ String build_sonar_args(String project_key) {
                        'sonar.issue.ignore.allfile', 'sonar.issue.ignore.block', 'sonar.issue.enforce.multicriteria']
     def ignored_keys = ['sonar.projectKey', 'sonar.projectName', 'sonar.host.url', 'sonar.login', 'sonar.token', 'sonar.password', 'sonar.skip']
 
-    // Archivo del micro si existe; si no, el general
-    def content = null
-    def origin  = ''
+    // Archivo del micro si existe; si no, el general.
+    //   config.properties_path (ej. 'pais/Test/java', misma ruta que la config del micro en jboss-micro/) → resources/sonarqube/<ruta>/
+    //   sin properties_path → resources/sonarqube/<component_name>/
+    def micro_path = String.valueOf(config.properties_path ?: project_key).trim().replaceAll(/^\/+|\/+$/, '')
+    if (!(micro_path ==~ /[A-Za-z0-9._\/-]+/) || micro_path.split('/').contains('..')) {
+        error("[ERROR]: ❌ sonarqube.properties_path no es una ruta válida: '${micro_path}' (ej. 'pais/Test/java', sin '..').")
+    }
+
+    def micro_file = "sonarqube/${micro_path}/sonar-project.properties"
+    def content    = null
+    def origin     = ''
     try {
-        content = resource("sonarqube/${project_key}/sonar-project.properties")
-        origin  = "propio de ${project_key}"
+        content = resource(micro_file)
+        origin  = "propio del micro (resources/${micro_file})"
     } catch (Exception e) {
         content = resource('sonarqube/sonar-project.properties')
-        origin  = 'general'
+        origin  = "general (no existe resources/${micro_file})"
     }
     println("[INFO]: SonarQube sonar-project.properties: ${origin}")
 

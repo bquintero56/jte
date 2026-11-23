@@ -1,6 +1,6 @@
 // Servidor SonarQube fijo en los steps: Sonar_server_SCAN_SERVER (Manage Jenkins → System → SonarQube servers).
 // Project key = component_name (keyword de la config) = nombre del repositorio.
-// Propiedades del análisis: resources/sonarqube/sonar-project.properties (general) o resources/sonarqube/<component_name>/...
+// Propiedades del análisis: resources/sonarqube/sonar-project.properties (general) o resources/sonarqube/<properties_path o component_name>/...
 // Se pasan como -D y le ganan al pom.xml del micro (los desarrolladores no pueden excluir código desde el pom).
 fields {
     required {
@@ -10,5 +10,7 @@ fields {
         settings_config      = String     // Managed file con el settings.xml (default 'GLOBAL_MAVEN_SETTINGS')
         quality_gate_minutes = Integer    // tiempo máximo esperando el Quality Gate (default 5)
         project_tags         = List       // tags extra del proyecto en SonarQube (el país, primera carpeta del job, siempre va)
+        properties_path      = String     // ruta del sonar-project.properties propio en resources/sonarqube/ (misma que la config del
+                                          // micro en jboss-micro/, ej. 'pais/Test/java'); default: component_name
     }
 }

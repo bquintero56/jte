@@ -222,7 +222,7 @@ Tags por país: `check_quality_gate`, después de `waitForQualityGate` (el proye
 `POST <SONAR_HOST_URL>/api/project_tags/set` con el token del servidor (`withSonarQubeEnv`; su usuario necesita 'Administer' en el
 proyecto, si no → 403, [WARN] + UNSTABLE). Tags = primera carpeta de JOB_NAME (país) + `sonarqube.project_tags` (List opcional); reemplaza los existentes.
 Propiedades del análisis centralizadas (los desarrolladores no las controlan): `sonarqube/resources/sonarqube/sonar-project.properties`
-general (o `.../<component_name>/sonar-project.properties`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
+general (o `.../<sonarqube.properties_path>/sonar-project.properties`, misma ruta que la config del micro en `jboss-micro/`, ej. `pais/Test/java`; sin el campo: `<component_name>`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
 no se definen; `sonar.*` en pom.xml, `.mvn/maven.config` / `.mvn/jvm.config` o un `sonar-project.properties` en el repo (lo ignora el
 scanner de Maven) → aviso y UNSTABLE.
 Cobertura: la mide el pipeline con UN solo agente (clase `Test`): `mvn clean` + `dependency:copy` del agente `org.jacoco.agent:0.8.12:runtime`
