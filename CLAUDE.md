@@ -225,6 +225,10 @@ Propiedades del análisis centralizadas (los desarrolladores no las controlan): 
 general (o `.../<sonarqube.properties_path>/sonar-project.properties`, misma ruta que la config del micro en `jboss-micro/`, ej. `pais/Test/java`; sin el campo: `<component_name>`), pasadas como `-D` (le ganan al pom); las de exclusión se fuerzan vacías si
 no se definen; `sonar.*` en pom.xml, `.mvn/maven.config` / `.mvn/jvm.config` o un `sonar-project.properties` en el repo (lo ignora el
 scanner de Maven) → aviso y UNSTABLE.
+Variante que RESPETA el pom (la que usa hoy `default_integration`; las de arriba quedan comentadas en el template): `scan_code_quality_pom`
+(el pom manda: del sonar-project.properties solo se pasan como -D las claves que ningún pom.xml declara; no fuerza exclusiones ni marca
+UNSTABLE; `sonar.skip=false` siempre; project key = `sonar.projectKey` del pom o `component_name`) + `check_quality_gate_pom` (lee el
+project key real de `target/sonar/report-task.txt` y llama a `check_quality_gate(key)` para los tags).
 Cobertura: la mide el pipeline con UN solo agente (clase `Test`): `mvn clean` + `dependency:copy` del agente `org.jacoco.agent:0.8.12:runtime`
 a `target/jte-jacoco-agent`, luego `mvn test -Djacoco.skip=true -DargLine=-javaagent:<agente>=destfile=target/jte-jacoco/jacoco.exec`
 (`jacoco.skip` apaga el prepare-agent del pom del micro: con dos agentes la JVM de surefire se caía con exit 134), borra `target/site/jacoco`

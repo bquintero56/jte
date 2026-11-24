@@ -45,12 +45,22 @@ timeout(time: execution.time, unit: execution.units) {
                     run_unit_test()
                 }
 
+                // SonarQube con la configuración del PIPELINE (sonar-project.properties manda sobre el pom.xml del micro):
+                // gitlab_stage('SonarQube: scan') {
+                //     scan_code_quality()
+                // }
+                //
+                // gitlab_stage('SonarQube: quality gate') {
+                //     check_quality_gate()
+                // }
+
+                // SonarQube respetando el pom.xml del micro (el pom manda; el sonar-project.properties solo rellena lo que falte)
                 gitlab_stage('SonarQube: scan') {
-                    scan_code_quality()
+                    scan_code_quality_pom()
                 }
 
                 gitlab_stage('SonarQube: quality gate') {
-                    check_quality_gate()
+                    check_quality_gate_pom()
                 }
 
                 gitlab_stage('Maven: build binary') {

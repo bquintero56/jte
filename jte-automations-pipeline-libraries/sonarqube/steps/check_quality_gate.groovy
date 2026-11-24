@@ -5,7 +5,9 @@
 //   Sin respuesta → al cumplirse quality_gate_minutes (default 5) falla por timeout (revisar el webhook en SonarQube)
 // Antes de evaluar el resultado pone los TAGS del proyecto en SonarQube (set_project_tags): aquí el proyecto ya existe,
 // porque SonarQube terminó de procesar el análisis (en el primer análisis de un micro el proyecto se crea en ese momento).
-void call() {
+// project_key_override: project key real del análisis (lo pasa check_quality_gate_pom cuando el pom define sonar.projectKey);
+// vacío = component_name.
+void call(String project_key_override = '') {
     def minutes = config.quality_gate_minutes ?: 5
 
     try {
@@ -14,7 +16,7 @@ void call() {
             quality_gate = waitForQualityGate(abortPipeline: false)
         }
 
-        set_project_tags()
+        set_project_tags(project_key_override)
 
         if (quality_gate.status == 'OK') {
             println('[INFO]: ✅ Quality Gate aprobado')
@@ -43,9 +45,12 @@ void call() {
 //   Reemplaza los tags que tenga el proyecto (los administra el pipeline, no se ponen a mano).
 //   Token: el del servidor Sonar_server_SCAN_SERVER en Jenkins (withSonarQubeEnv). Su usuario necesita permiso "Administer" en el
 //   proyecto; si no lo tiene (403) → [WARN] + UNSTABLE y el pipeline sigue (los tags no bloquean el pipeline).
-void set_project_tags() {
+void set_project_tags(String project_key_override = '') {
     def project_key = ''
     try { project_key = component_name } catch (MissingPropertyException e) { project_key = '' }
+    if (project_key_override?.trim()) {
+        project_key = project_key_override.trim()
+    }
 
     def job_path = String.valueOf(env.JOB_NAME ?: '').tokenize('/')
     def country  = job_path ? job_path[0] : ''
