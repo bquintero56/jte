@@ -60,7 +60,7 @@ timeout(time: execution.time, unit: execution.units) {
                 }
 
                 gitlab_stage('SonarQube: quality gate') {
-                    check_quality_gate_pom()
+                    check_quality_gate()         // el mismo de la otra variante (project key = component_name en las dos)
                 }
 
                 gitlab_stage('Maven: build binary') {

@@ -3,8 +3,9 @@
 //   Prioridad  : 1) propiedades sonar.* del pom.xml (cualquier módulo)
 //                2) sonar-project.properties del micro (resources/sonarqube/<properties_path o component_name>/) o el general:
 //                   solo se pasan como -D las que el pom NO declara (rellenan lo que falte, no pisan al pom)
-//   Project key: sonar.projectKey del pom si lo declara; si no, component_name. check_quality_gate_pom lee el key real del análisis.
-//   Siempre    : sonar.skip=false (si el pom apagara el análisis, el Quality Gate se quedaría esperando).
+//   Siempre    : sonar.projectKey / sonar.projectName = component_name (el pom no los cambia: los tags de check_quality_gate van a
+//                ese proyecto) y sonar.skip=false (si el pom apagara el análisis, el Quality Gate se quedaría esperando).
+//   El Quality Gate es el mismo check_quality_gate de la otra variante.
 //   Diferencias con scan_code_quality: no fuerza las exclusiones vacías ni marca UNSTABLE si el pom tiene sonar.*; solo lo informa.
 //   JDK / Maven: propiedades de carpeta F_PIPELINE_JDK_TOOL_VERSION / F_PIPELINE_MAVEN_TOOL_VERSION
 // Necesita las clases compiladas en target/ (va después de los unit tests y antes del build, que hace clean).
@@ -15,7 +16,7 @@ void call() {
     try { project_key = component_name } catch (MissingPropertyException e) { project_key = '' }
 
     if (!project_key) {
-        error('[ERROR]: ❌ Falta component_name en keywords de la config (es el project key de SonarQube si el pom no define sonar.projectKey).')
+        error('[ERROR]: ❌ Falta component_name en keywords de la config (es el project key de SonarQube).')
     }
 
     try {
@@ -110,16 +111,16 @@ String build_sonar_args(String project_key, List pom_keys) {
         println("[INFO]: No se pasan (las define el pom.xml): ${skipped.join(', ')}")
     }
 
-    props['sonar.skip'] = 'false'
-    if (pom_keys.contains('sonar.projectKey')) {
-        println('[INFO]: Project key: el del pom.xml (sonar.projectKey)')
+    // Project key/name SIEMPRE = component_name (como host y token, el pom no los cambia): así check_quality_gate pone los tags
+    // por país en el proyecto correcto sin cambios.
+    props['sonar.skip']        = 'false'
+    props['sonar.projectKey']  = project_key
+    props['sonar.projectName'] = project_key
+    if (pom_keys.contains('sonar.projectKey') || pom_keys.contains('sonar.projectName')) {
+        println("[WARN]: ⚠️ El pom.xml define sonar.projectKey / sonar.projectName: se ignoran, el proyecto es '${project_key}' (component_name)")
     }
     else {
-        props['sonar.projectKey'] = project_key
         println("[INFO]: Project key: '${project_key}' (component_name)")
-    }
-    if (!pom_keys.contains('sonar.projectName')) {
-        props['sonar.projectName'] = props['sonar.projectKey'] ?: project_key
     }
 
     def args = []
