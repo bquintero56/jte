@@ -1,4 +1,4 @@
-// CD de componentes JBoss: lo lanza el CI del micro (trigger_jboss_deploy_job) con COMPONENT_NAME y COMPONENT_PACKAGING.
+// CD de componentes JBoss: lo lanza el CI del micro (trigger_jboss_deploy_job) con COMPONENT_NAME, COMPONENT_PACKAGING y SERVER_GROUPS (solo domain).
 // Un job por servidor JBoss (ej. pais/jboss-server/app1/dev/jboss-ui-deployment), con la config del SERVIDOR.
 // Flujo: deployment info → undeploy (solo si ya existe) → deploy → verify. Standalone o domain según la librería que carga la config del servidor
 // (jboss_cd_standalone o jboss_cd_domain: mismos nombres de steps).
@@ -7,7 +7,8 @@ properties([
     disableConcurrentBuilds(),
     parameters([
         string(name: 'COMPONENT_NAME',      defaultValue: '', description: 'Nombre del componente (lo envía el CI)'),
-        string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)')
+        string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)'),
+        string(name: 'SERVER_GROUPS',       defaultValue: '', description: 'Server groups separados por coma (solo JBoss domain; lo envía el CI desde la config del micro). Standalone lo ignora')
     ])
 ])
 

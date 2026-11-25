@@ -1,4 +1,4 @@
-// Lista los deployments de cada server group de config.server_groups en el JBoss DOMAIN (config.host_deploy), con su estado en cada
+// Lista los deployments de cada server group (resolve_server_groups: SERVER_GROUPS del micro o config.server_groups) en el JBoss DOMAIN (config.host_deploy), con su estado en cada
 // servidor del grupo, con jboss-cli por SSH. Equivalente de jboss_cd_standalone.get_deployments_runtime para modo domain.
 //   jboss-cli (3 consultas):
 //     1) por cada server group: /server-group=<grupo>:read-children-resources(child-type=deployment,include-runtime=true)
@@ -18,7 +18,6 @@ List call() {
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
     def credentials_id = String.valueOf(config.cli_credentials_id ?: 'jboss-cli').trim()
-    def server_groups  = (config.server_groups ?: []).collect { String.valueOf(it).trim() }.findAll { it }
 
     if (!host) {
         error('[ERROR]: ❌ Falta jboss_cd_domain.host_deploy en la config del servidor.')
@@ -26,14 +25,9 @@ List call() {
     if (!ssh_user) {
         error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd_domain.user en la config).')
     }
-    if (!server_groups) {
-        error('[ERROR]: ❌ Falta jboss_cd_domain.server_groups en la config del servidor (ej. [\'main-server-group\']).')
-    }
-    server_groups.each { group ->
-        if (!(group ==~ /[A-Za-z0-9._-]+/)) {
-            error("[ERROR]: ❌ Server group no válido para jboss-cli: '${group}'.")
-        }
-    }
+
+    // SERVER_GROUPS del micro (parámetro) o, si viene vacío, jboss_cd_domain.server_groups de la config del servidor
+    def server_groups = resolve_server_groups()
 
     println("[INFO]: Consultando los deployments de los server groups ${server_groups.join(', ')} en JBoss domain (${host})")
 

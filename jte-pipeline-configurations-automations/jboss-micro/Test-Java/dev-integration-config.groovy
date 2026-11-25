@@ -4,6 +4,7 @@ application_environments {
         long_name          = 'Development environment'
         short_name         = 'dev'
         deployment_project = ['pais/jboss-server/app1/dev/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss-server/<app>/<ambiente>/<servidor>-deployment)
+        // server_groups   = ['main-server-group']   // solo si el servidor es JBoss DOMAIN: server groups donde se despliega este micro
     }
 }
 

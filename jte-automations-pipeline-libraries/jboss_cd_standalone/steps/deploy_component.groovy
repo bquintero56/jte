@@ -10,6 +10,10 @@
 // El template ejecuta undeploy_component antes si el componente ya existía.
 // Devuelve true si desplegó y false si fue simulación (dry_run): el template solo verifica si devolvió true.
 Boolean call(String component_name, String component_packaging) {
+    if (String.valueOf(params.SERVER_GROUPS ?: '').trim()) {
+        println("[WARN]: ⚠️ Este servidor es STANDALONE: se ignoran los server groups recibidos (SERVER_GROUPS=${params.SERVER_GROUPS}).")
+    }
+
     def host           = String.valueOf(config.host_deploy ?: '').trim()
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
