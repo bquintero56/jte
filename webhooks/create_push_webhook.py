@@ -4,7 +4,7 @@ Crea (o actualiza) el webhook de PUSH en los repos de GitLab que se listen en RE
 
 El webhook llama al job orquestador de Jenkins (push_orchestrator), que lanza el pipeline de la rama.
   - Nombre      : WEBHOOK_NAME (descriptivo, se ve en Settings -> Webhooks de cada repo)
-  - Eventos     : solo "Push events" (todas las ramas)
+  - Eventos     : solo "Push events", opción "All branches"
   - Secret token: el mismo password de la credencial de Jenkins 'gitlab-webhook-token'
   - SSL         : "Enable SSL verification" DESACTIVADO
 Si el repo ya tiene un webhook con la misma URL, lo actualiza (no lo duplica).
@@ -55,6 +55,8 @@ PROXY_URL = ''
 
 WEBHOOK_SETTINGS = {
     'push_events': True,
+    'branch_filter_strategy': 'all_branches',   # Push events → "All branches" (también al actualizar un webhook que tenía filtro)
+    'push_events_branch_filter': '',
     'tag_push_events': False,
     'merge_requests_events': False,
     'issues_events': False,
