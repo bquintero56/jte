@@ -51,6 +51,10 @@ REPOSITORIES = [
 # la clave se pide al ejecutar (o variable de entorno PROXY_PASSWORD).
 PROXY_URL = ''
 
+# Secret token del webhook (= password de la credencial de Jenkins 'gitlab-webhook-token'). Vacío = se toma de la variable de entorno
+# WEBHOOK_SECRET_TOKEN o se pide al ejecutar. ⚠️ Si lo escribes aquí, NO hagas commit de este archivo con el valor: el repo es público.
+WEBHOOK_SECRET_TOKEN = ''
+
 # ---------------------------------------------------------------------------------------------------------------------
 
 WEBHOOK_SETTINGS = {
@@ -168,7 +172,7 @@ def main():
         sys.exit('[ERROR]: ❌ REPOSITORIES está vacío: agrega las URL de los repos.')
 
     api_token = os.environ.get('GITLAB_API_TOKEN') or getpass.getpass('Token de GitLab (scope api): ')
-    secret_token = os.environ.get('WEBHOOK_SECRET_TOKEN') or getpass.getpass('Secret token del webhook: ')
+    secret_token = WEBHOOK_SECRET_TOKEN or os.environ.get('WEBHOOK_SECRET_TOKEN') or getpass.getpass('Secret token del webhook: ')
     if not api_token.strip() or not secret_token.strip():
         sys.exit('[ERROR]: ❌ Falta el token de GitLab o el secret token.')
 
