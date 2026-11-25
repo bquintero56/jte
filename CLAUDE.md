@@ -255,7 +255,10 @@ CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros
 ENABLED true y STATUS OK; `true false STOPPED` = existe pero detenido); error de conexión/autenticación → ❌. Es una etapa visible del template del CD
 (`JBoss: deployment info`). `jboss_cd_standalone.get_deployments_runtime()` lista TODOS los deployments con
 `:read-children-resources(child-type=deployment,include-runtime=true)` (salida DMR) → lista de [name, runtime_name, enabled, persistent,
-status, running]; aún no está en el template. Flujo del CD: deployment info → `deploy_component(nombre, empaquetado)` →
+status, running]; aún no está en el template. `jboss_cd_domain.get_deployments_runtime()` hace lo mismo por cada `server_groups` de la
+config: `/server-group=<g>:read-children-resources(child-type=deployment,include-runtime=true)` + `/host=*/server=*:read-attribute(name=server-group)`
++ `/host=*/server=*/deployment=*:read-attribute(name=status)` → [server_group, name, runtime_name, enabled, servers [host, server, status],
+running (enabled y OK en todos los servidores en ejecución del grupo)]. Flujo del CD: deployment info → `deploy_component(nombre, empaquetado)` →
 verify (`get_deployment_info` otra vez). Verify exige `running`. `jboss_cd_standalone.dry_run = true` → SIMULACIÓN: deploy solo muestra el
 comando y verify se omite. Antes del deploy, si `deployment_info.exists`, etapa `JBoss: undeploy component` →
 `undeploy_component(nombre, empaquetado)` (standalone: `undeploy <comp>.<pkg>`; domain: `--all-relevant-server-groups`). Deploy: `jboss-cli --command='deploy <JBOSS_TEMP_PATH>/<componente>/<archivo> --name=<comp>.<pkg>
