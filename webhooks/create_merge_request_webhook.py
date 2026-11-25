@@ -55,6 +55,10 @@ PROXY_URL = ''
 # WEBHOOK_SECRET_TOKEN o se pide al ejecutar. ⚠️ Si lo escribes aquí, NO hagas commit de este archivo con el valor: el repo es público.
 WEBHOOK_SECRET_TOKEN = ''
 
+# Token de GitLab (scope api, usuario con rol Maintainer en los repos). Vacío = se toma de la variable de entorno GITLAB_API_TOKEN o se
+# pide al ejecutar. ⚠️ Si lo escribes aquí, NO hagas commit de este archivo con el valor: el repo es público.
+GITLAB_API_TOKEN = ''
+
 # ---------------------------------------------------------------------------------------------------------------------
 
 WEBHOOK_SETTINGS = {
@@ -169,7 +173,7 @@ def main():
     if not REPOSITORIES:
         sys.exit('[ERROR]: ❌ REPOSITORIES está vacío: agrega las URL de los repos.')
 
-    api_token = os.environ.get('GITLAB_API_TOKEN') or getpass.getpass('Token de GitLab (scope api): ')
+    api_token = GITLAB_API_TOKEN or os.environ.get('GITLAB_API_TOKEN') or getpass.getpass('Token de GitLab (scope api): ')
     secret_token = WEBHOOK_SECRET_TOKEN or os.environ.get('WEBHOOK_SECRET_TOKEN') or getpass.getpass('Secret token del webhook: ')
     if not api_token.strip() or not secret_token.strip():
         sys.exit('[ERROR]: ❌ Falta el token de GitLab o el secret token.')
