@@ -26,13 +26,9 @@ def temporary_folder_created = false
 
 // Parámetros para el job de CD (despliegue) y si se espera a que termine
 def wait_job_execution = true
-// Server groups del ambiente (solo JBoss domain; vacío si el micro no los define). Standalone ignora el parámetro.
-def server_groups = []
-try { server_groups = prod.server_groups ?: [] } catch (MissingPropertyException e) { server_groups = [] }
 def jboss_pipeline_parameters = [
     string(name: 'COMPONENT_NAME',      value: component_name),
-    string(name: 'COMPONENT_PACKAGING', value: component_packaging),
-    string(name: 'SERVER_GROUPS',       value: server_groups.join(','))
+    string(name: 'COMPONENT_PACKAGING', value: component_packaging)
 ]
 
 timeout(time: execution.time, unit: execution.units) {

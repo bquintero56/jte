@@ -1,6 +1,6 @@
 // Despliega en el JBoss del servidor (config.host_deploy) el artefacto que dejó el CI en <JBOSS_TEMP_PATH>/<COMPONENT_NAME>.
 //   Artefacto : único *.<component_packaging> en la carpeta temporal DEL SERVIDOR (jboss-cli corre en el servidor, ruta absoluta)
-//   Modo      : DOMAIN → jboss-cli deploy <archivo> --server-groups=<SERVER_GROUPS del micro o config.server_groups>  (para standalone usar jboss_cd_standalone)
+//   Modo      : DOMAIN → jboss-cli deploy <archivo> --server-groups=<config.server_groups>  (para standalone usar jboss_cd_standalone)
 //   jboss-cli : <jboss_home>/bin/jboss-cli.sh (default /opt/jboss-eap), credencial config.cli_credentials_id (default 'jboss-cli')
 //   SSH       : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
 // Si el componente ya estaba desplegado, antes debe correr undeploy_component (si no, JBoss rechaza el deploy por duplicado).
@@ -28,8 +28,7 @@ Boolean call(String component_name, String component_packaging) {
         error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd_domain.user en la config).')
     }
 
-    def server_groups = resolve_server_groups()
-    def target_args   = " --server-groups=${server_groups.join(',')}"
+    def target_args = " --server-groups=${config.server_groups.join(',')}"
 
     def temp_dir = "${temp_base}/${name}"
 
@@ -48,7 +47,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
     def artifact = found
 
     // 2. Deploy con jboss-cli (ruta absoluta del archivo en el servidor)
-    println("[INFO]: Desplegando ${artifact} en JBoss domain (${host}, server groups: ${server_groups.join(', ')})")
+    println("[INFO]: Desplegando ${artifact} en JBoss domain (${host}, server groups: ${config.server_groups})")
 
     println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
 
