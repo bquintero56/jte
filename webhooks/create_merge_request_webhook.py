@@ -15,6 +15,7 @@ Uso (solo librería estándar de Python 3, sin pip install):
      Pide el token de GitLab y el secret token (no se muestran al escribir). También se pueden pasar como
      variables de entorno GITLAB_API_TOKEN y WEBHOOK_SECRET_TOKEN.
      Con --dry-run solo muestra lo que haría, sin cambiar nada.
+     Proxy: PROXY_URL abajo (o variable de entorno GITLAB_PROXY_URL); si pide usuario, variable de entorno PROXY_USER.
 
 Token de GitLab: Personal/Project/Group Access Token con scope 'api' de un usuario con rol Maintainer en los repos.
 Repo público: NO escribir aquí tokens, secret tokens ni URLs internas reales que no deban publicarse.
@@ -44,6 +45,11 @@ REPOSITORIES = [
     'https://gitlab.com.co/pais/codigo/repo1',
     # 'https://gitlab.com.co/pais/codigo/repo2',
 ]
+
+# Proxy para llegar a GitLab (ej. 'http://proxy.empresa.com:8080'), SIN usuario ni clave. Vacío = sin proxy propio: se usan las
+# variables de entorno HTTPS_PROXY / HTTP_PROXY si existen. Si el proxy pide usuario, definir PROXY_USER (variable de entorno):
+# la clave se pide al ejecutar (o variable de entorno PROXY_PASSWORD).
+PROXY_URL = ''
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -77,6 +83,35 @@ def split_repository_url(repository_url):
     return f'{parsed.scheme}://{parsed.netloc}', path
 
 
+def build_opener():
+    """Cliente HTTP: con PROXY_URL (y usuario/clave si PROXY_USER está definido) o, si está vacío, con el proxy del entorno."""
+    proxy_url = (os.environ.get('GITLAB_PROXY_URL') or PROXY_URL).strip()
+    if not proxy_url:
+        env_proxy = urllib.request.getproxies().get('https')
+        print(f'[INFO]: Proxy: {"del entorno (HTTPS_PROXY)" if env_proxy else "sin proxy"}')
+        return urllib.request.build_opener()
+
+    parsed = urllib.parse.urlparse(proxy_url)
+    if parsed.scheme not in ('http', 'https') or not parsed.hostname:
+        sys.exit(f'[ERROR]: ❌ PROXY_URL no válida (ej. http://proxy.empresa.com:8080): {proxy_url}')
+    if parsed.username:
+        sys.exit('[ERROR]: ❌ No pongas usuario ni clave en PROXY_URL: usa la variable de entorno PROXY_USER (la clave se pide al ejecutar).')
+
+    proxy_user = os.environ.get('PROXY_USER', '').strip()
+    if proxy_user:
+        proxy_password = os.environ.get('PROXY_PASSWORD') or getpass.getpass(f'Clave del proxy para {proxy_user}: ')
+        credentials = f'{urllib.parse.quote(proxy_user, safe="")}:{urllib.parse.quote(proxy_password, safe="")}@'
+        proxy_with_auth = f'{parsed.scheme}://{credentials}{parsed.netloc}'
+    else:
+        proxy_with_auth = proxy_url
+
+    print(f'[INFO]: Proxy: {parsed.scheme}://{parsed.netloc}{" (con usuario " + proxy_user + ")" if proxy_user else ""}')
+    return urllib.request.build_opener(urllib.request.ProxyHandler({'http': proxy_with_auth, 'https': proxy_with_auth}))
+
+
+OPENER = None
+
+
 def gitlab_request(method, url, api_token, data=None):
     """Llama a la API de GitLab y devuelve el JSON de la respuesta. Lanza RuntimeError con el código y mensaje si falla."""
     body = None
@@ -86,7 +121,7 @@ def gitlab_request(method, url, api_token, data=None):
         headers['Content-Type'] = 'application/json'
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with OPENER.open(request, timeout=30) as response:
             text = response.read().decode('utf-8')
             return json.loads(text) if text else None
     except urllib.error.HTTPError as error:
@@ -124,6 +159,7 @@ def configure_webhook(repository_url, api_token, secret_token, dry_run):
 
 
 def main():
+    global OPENER
     dry_run = '--dry-run' in sys.argv[1:]
 
     if not REPOSITORIES:
@@ -133,6 +169,8 @@ def main():
     secret_token = os.environ.get('WEBHOOK_SECRET_TOKEN') or getpass.getpass('Secret token del webhook: ')
     if not api_token.strip() or not secret_token.strip():
         sys.exit('[ERROR]: ❌ Falta el token de GitLab o el secret token.')
+
+    OPENER = build_opener()
 
     print(f'[INFO]: Webhook de merge request → {JENKINS_WEBHOOK_URL} ({len(REPOSITORIES)} repo(s))')
     failed = []

@@ -106,3 +106,6 @@ descriptivo, Secret token y *Enable SSL verification* desactivado:
    `gitlab-webhook-token`). No se guardan en el repo; también se pueden pasar con las variables `GITLAB_API_TOKEN` y `WEBHOOK_SECRET_TOKEN`.
 
 Si el repo ya tiene un webhook con la misma URL, lo actualiza en vez de duplicarlo.
+
+**Proxy:** poner `PROXY_URL` en cada script (ej. `http://proxy.empresa.com:8080`, sin usuario ni clave) o la variable `GITLAB_PROXY_URL`;
+vacío = se usa `HTTPS_PROXY` del entorno si existe. Si el proxy pide usuario: variable `PROXY_USER` (la clave se pide al ejecutar o va en `PROXY_PASSWORD`).
