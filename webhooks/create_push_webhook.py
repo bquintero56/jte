@@ -40,6 +40,10 @@ JENKINS_WEBHOOK_URL = 'https://jenkins.ejemplo.com/project/webhook/push-in-appli
 WEBHOOK_NAME        = 'Jenkins - Push (orquestador de pipelines)'
 WEBHOOK_DESCRIPTION = 'Cada push lanza el job orquestador de Jenkins, que ejecuta el pipeline de la rama.'
 
+# URL base de GitLab, INCLUYENDO la ruta si GitLab no está en la raíz del dominio (ej. 'https://servidor.ejemplo.com/gitlab').
+# Vacío = GitLab en la raíz: la base es https://<dominio> de cada repo. La API queda en <GITLAB_URL>/api/v4.
+GITLAB_URL = ''
+
 # Repos donde se crea el webhook: URL completa del repo en GitLab (igual que en el navegador, con o sin .git)
 REPOSITORIES = [
     'https://gitlab.com.co/pais/codigo/repo1',
@@ -81,16 +85,29 @@ WEBHOOK_SETTINGS = {
 
 
 def split_repository_url(repository_url):
-    """'https://gitlab.com.co/pais/codigo/repo1(.git)' -> ('https://gitlab.com.co', 'pais/codigo/repo1')"""
-    parsed = urllib.parse.urlparse(repository_url.strip())
+    """Devuelve (URL base de GitLab, ruta del proyecto).
+    Con GITLAB_URL = 'https://servidor.ejemplo.com/gitlab':
+        'https://servidor.ejemplo.com/gitlab/pais/codigo/repo1(.git)' -> ('https://servidor.ejemplo.com/gitlab', 'pais/codigo/repo1')
+    Sin GITLAB_URL (GitLab en la raíz del dominio):
+        'https://gitlab.com.co/pais/codigo/repo1(.git)'  -> ('https://gitlab.com.co', 'pais/codigo/repo1')"""
+    url = repository_url.strip().rstrip('/')
+    if url.endswith('.git'):
+        url = url[:-4]
+    parsed = urllib.parse.urlparse(url)
     if parsed.scheme not in ('http', 'https') or not parsed.netloc:
         raise ValueError(f'URL de repo no válida (debe empezar con https://): {repository_url}')
-    path = parsed.path.strip('/')
-    if path.endswith('.git'):
-        path = path[:-4]
+
+    gitlab_url = GITLAB_URL.strip().rstrip('/')
+    if gitlab_url:
+        if not url.startswith(gitlab_url + '/'):
+            raise ValueError(f'La URL del repo no empieza con GITLAB_URL ({gitlab_url}): {repository_url}')
+        server, path = gitlab_url, url[len(gitlab_url) + 1:]
+    else:
+        server, path = f'{parsed.scheme}://{parsed.netloc}', parsed.path.strip('/')
+
     if path.count('/') < 1:
         raise ValueError(f'La URL no tiene grupo/proyecto: {repository_url}')
-    return f'{parsed.scheme}://{parsed.netloc}', path
+    return server, path
 
 
 def build_opener():

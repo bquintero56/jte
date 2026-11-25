@@ -101,6 +101,8 @@ descriptivo, Secret token y *Enable SSL verification* desactivado:
 | `webhooks/create_merge_request_webhook.py` | Validador de MR (`merge_request_validator`) | Merge request events |
 
 1. En cada script, editar `JENKINS_WEBHOOK_URL` (URL del job) y `REPOSITORIES` (URL de cada repo, ej. `https://gitlab.com.co/pais/codigo/repo1`).
+   Si GitLab NO está en la raíz del dominio (ej. `https://servidor/gitlab/...`), poner esa base en `GITLAB_URL`: sin ella la API se
+   llama en la raíz del dominio y puede responder otro servidor (ej. Jenkins con "Authentication required").
 2. Ejecutar `python3 webhooks/create_push_webhook.py` (o con `--dry-run` para ver qué haría sin cambiar nada).
 3. El script pide el **token de GitLab** (scope `api`, rol Maintainer en los repos) y el **Secret token** (el password de
    `gitlab-webhook-token`). No se guardan en el repo; también se pueden pasar con las variables `GITLAB_API_TOKEN` y `WEBHOOK_SECRET_TOKEN`.
