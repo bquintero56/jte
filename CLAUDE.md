@@ -179,6 +179,9 @@ En GitLab los repos están en `mexico/<appcode>/<repo>` (grupo `mexico`, subgrup
 El step `disparar_pipeline_aplicacion(branch_name, repository_name, appcode)` lanza `mexico/<appcode>/<repo>/<rama>` si la rama es
 de ambiente (`dev, qa, uat, release, main`), si no `mexico/<appcode>/<repo>/integration`, con parámetro `BRANCH`, `wait: false`.
 Los proyectos en Jenkins tienen la misma estructura de carpetas y nombres que en GitLab.
+Scripts para crear los webhooks por repo (Python 3, solo stdlib, API `/projects/:id/hooks`, crean o actualizan por URL, nombre
+descriptivo, Secret token pedido con getpass o env `WEBHOOK_SECRET_TOKEN`, `enable_ssl_verification: false`): `webhooks/create_push_webhook.py`
+(push) y `webhooks/create_merge_request_webhook.py` (merge request).
 Archivos: config `jte-pipeline-configurations-automations/webhook/push-orchestrator/pipeline_config.groovy`, librería `jte-automations-pipeline-libraries/webhook`,
 template `jte-pipelines-template/webhook/push_orchestrator.groovy`.
 Promoción de ramas (sin hotfix, sin excepciones): rama de trabajo → dev → qa → uat → main. Un job APARTE del orquestador, `merge_request_validator`

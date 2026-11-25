@@ -89,3 +89,20 @@ Nombres que el código espera encontrar **exactamente así**:
 
 > La URL del webhook incluye la carpeta y el nombre del job: si se renombra o se mueve un job en Jenkins, hay que actualizar la URL
 > en el webhook de GitLab.
+
+### Crear los webhooks con script
+
+En `webhooks/` hay dos scripts de Python 3 (solo librería estándar) que crean o actualizan los webhooks **por repo**, con nombre
+descriptivo, Secret token y *Enable SSL verification* desactivado:
+
+| Script | Webhook | Eventos |
+|---|---|---|
+| `webhooks/create_push_webhook.py` | Orquestador (`push_orchestrator`) | Push events |
+| `webhooks/create_merge_request_webhook.py` | Validador de MR (`merge_request_validator`) | Merge request events |
+
+1. En cada script, editar `JENKINS_WEBHOOK_URL` (URL del job) y `REPOSITORIES` (URL de cada repo, ej. `https://gitlab.com.co/pais/codigo/repo1`).
+2. Ejecutar `python3 webhooks/create_push_webhook.py` (o con `--dry-run` para ver qué haría sin cambiar nada).
+3. El script pide el **token de GitLab** (scope `api`, rol Maintainer en los repos) y el **Secret token** (el password de
+   `gitlab-webhook-token`). No se guardan en el repo; también se pueden pasar con las variables `GITLAB_API_TOKEN` y `WEBHOOK_SECRET_TOKEN`.
+
+Si el repo ya tiene un webhook con la misma URL, lo actualiza en vez de duplicarlo.
