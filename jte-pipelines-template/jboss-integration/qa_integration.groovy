@@ -26,9 +26,13 @@ def temporary_folder_created = false
 
 // Parámetros para el job de CD (despliegue) y si se espera a que termine
 def wait_job_execution = true
+// Domain controller del ambiente (solo JBoss domain; vacío si el micro no lo define → localhost:9990). Standalone lo ignora.
+def jboss_controller = ''
+try { jboss_controller = qa.jboss_controller ?: '' } catch (MissingPropertyException e) { jboss_controller = '' }
 def jboss_pipeline_parameters = [
     string(name: 'COMPONENT_NAME',      value: component_name),
-    string(name: 'COMPONENT_PACKAGING', value: component_packaging)
+    string(name: 'COMPONENT_PACKAGING', value: component_packaging),
+    string(name: 'JBOSS_CONTROLLER',    value: String.valueOf(jboss_controller))
 ]
 
 timeout(time: execution.time, unit: execution.units) {

@@ -7,7 +7,8 @@ properties([
     disableConcurrentBuilds(),
     parameters([
         string(name: 'COMPONENT_NAME',      defaultValue: '', description: 'Nombre del componente (lo envía el CI)'),
-        string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)')
+        string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)'),
+        string(name: 'JBOSS_CONTROLLER',    defaultValue: '', description: 'Domain controller host:puerto para jboss-cli --controller (solo JBoss domain; lo envía el CI desde la config del micro). Vacío = localhost:9990')
     ])
 ])
 

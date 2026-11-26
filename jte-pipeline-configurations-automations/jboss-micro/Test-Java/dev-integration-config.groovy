@@ -4,6 +4,7 @@ application_environments {
         long_name          = 'Development environment'
         short_name         = 'dev'
         deployment_project = ['pais/jboss-server/app1/dev/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss-server/<app>/<ambiente>/<servidor>-deployment)
+        // jboss_controller = '<ip-o-host>:9990'      // solo JBoss DOMAIN: domain controller (host:puerto de administración) para jboss-cli --controller
     }
 }
 

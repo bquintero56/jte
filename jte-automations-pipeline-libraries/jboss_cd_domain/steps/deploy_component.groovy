@@ -10,6 +10,7 @@ Boolean call(String component_name, String component_packaging) {
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
     def credentials_id = String.valueOf(config.cli_credentials_id ?: 'jboss-cli').trim()
+    def controller_arg = jboss_controller_argument()      // ' --controller=<host>:<puerto>' (JBOSS_CONTROLLER del micro) o ''
     def temp_base      = String.valueOf(env.JBOSS_TEMP_PATH ?: '').trim().replaceFirst(/\/+$/, '')
     def name           = String.valueOf(component_name ?: '').trim()
     def packaging      = String.valueOf(component_packaging ?: '').trim()
@@ -49,7 +50,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
     // 2. Deploy con jboss-cli (ruta absoluta del archivo en el servidor)
     println("[INFO]: Desplegando ${artifact} en JBoss domain (${host}, server groups: ${config.server_groups})")
 
-    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u=*** -p=*** --command='${cli_command}'\"")
 
     def status_code = 0
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -57,7 +58,7 @@ ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} 'ls -1 "${temp_dir
                                       passwordVariable: 'JBOSS_CLI_PASSWORD')]) {
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log
         status_code = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='deploy ${artifact}${target_args}'" 2>&1""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='deploy ${artifact}${target_args}'" 2>&1""",
                          returnStatus: true)
     }
 

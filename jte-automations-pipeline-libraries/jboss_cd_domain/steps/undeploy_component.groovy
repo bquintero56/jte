@@ -10,6 +10,7 @@ Boolean call(String component_name, String component_packaging) {
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
     def credentials_id = String.valueOf(config.cli_credentials_id ?: 'jboss-cli').trim()
+    def controller_arg = jboss_controller_argument()      // ' --controller=<host>:<puerto>' (JBOSS_CONTROLLER del micro) o ''
     def name           = String.valueOf(component_name ?: '').trim()
     def packaging      = String.valueOf(component_packaging ?: '').trim()
 
@@ -30,13 +31,13 @@ Boolean call(String component_name, String component_packaging) {
     // Simulación (config.dry_run = true): muestra el comando y NO toca JBoss
     if (config.dry_run == true) {
         println("[WARN]: ⚠️ SIMULACIÓN (jboss_cd_domain.dry_run = true): NO se retira nada en ${host}.")
-        println("[INFO]: Comando que se ejecutaría en ${host}: ${jboss_home}/bin/jboss-cli.sh --connect --command='${cli_command}'")
+        println("[INFO]: Comando que se ejecutaría en ${host}: ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} --command='${cli_command}'")
         return false
     }
 
     println("[INFO]: Retirando '${deployment_name}' de JBoss domain (${host})")
 
-    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u=*** -p=*** --command='${cli_command}'\"")
 
     def status_code = 0
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -44,7 +45,7 @@ Boolean call(String component_name, String component_packaging) {
                                       passwordVariable: 'JBOSS_CLI_PASSWORD')]) {
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log
         status_code = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1""",
                          returnStatus: true)
     }
 
