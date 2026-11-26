@@ -8,7 +8,8 @@ properties([
     parameters([
         string(name: 'COMPONENT_NAME',      defaultValue: '', description: 'Nombre del componente (lo envía el CI)'),
         string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)'),
-        string(name: 'JBOSS_CONTROLLER',    defaultValue: '', description: 'Domain controller host:puerto para jboss-cli --controller (solo JBoss domain; lo envía el CI). Vacío = localhost:9990')
+        string(name: 'JBOSS_CONTROLLER',    defaultValue: '', description: 'Domain controller host:puerto para jboss-cli --controller (solo JBoss domain; lo envía el CI). Vacío = localhost:9990'),
+        string(name: 'SERVER_GROUPS',       defaultValue: '', description: 'Server groups separados por coma (solo JBoss domain; lo envía el CI desde la config del micro). Standalone lo ignora')
     ])
 ])
 

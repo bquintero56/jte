@@ -15,6 +15,7 @@ fields {
                                        // si no va, get_deployments_runtime consulta TODOS los server groups del domain
 
         user               = String    // solo si este servidor usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
+        run_as_user        = String    // usuario del SO con el que corre jboss-cli (ej. 'jboss-eap' → 'sudo -u jboss-eap <jboss_home>/bin/jboss-cli.sh')
         jboss_home         = String    // ruta de JBoss en el servidor (default '/opt/jboss-eap')
         cli_credentials_id = String    // credencial Username with password del usuario de administración de JBoss (default 'jboss-cli')
     }
