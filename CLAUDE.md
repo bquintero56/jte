@@ -264,9 +264,7 @@ comando y verify se omite. Antes del deploy, si `deployment_info.exists`, etapa 
 `undeploy_component(nombre, empaquetado)` (standalone: `undeploy <comp>.<pkg>`; domain: `--all-relevant-server-groups`). Deploy: `jboss-cli --command='deploy <JBOSS_TEMP_PATH>/<componente>/<archivo> --name=<comp>.<pkg>
 --runtime-name=<comp>.<pkg> --force'` (nombre fijo; --force reemplaza si ya existe, sin undeploy previo) con ruta absoluta en el
 servidor (sin `cd`); un solo template para standalone y domain; DOS librerías con los mismos steps:
-`jboss_cd_standalone` y `jboss_cd_domain` (`server_groups` obligatorio → `--server-groups=g1,g2`; domain controller: `<ambiente>.jboss_controller`
-en la config del MICRO (host:puerto, sin puerto → 9990) → el CI lo envía como parámetro `JBOSS_CONTROLLER` al CD → cada step de domain
-agrega `--controller=<host>:<puerto>` a todos los jboss-cli de domain; vacío = localhost:9990; standalone lo ignora); la config del servidor carga una sola y una config por servidor JBoss:
+`jboss_cd_standalone` y `jboss_cd_domain` (`server_groups` obligatorio → `--server-groups=g1,g2`); la config del servidor carga una sola y una config por servidor JBoss:
 `jte-pipeline-configurations-automations/jboss-server/<app>/<ambiente>/<servidor>-deployment-config.groovy` ↔ job `pais/jboss-server/<app>/<ambiente>/<servidor>-deployment`
 (ej. app1/dev/jboss-ui, jboss-ex, jboss-micro). El micro lista en `deployment_project` los servidores donde se despliega. PRUEBA: hoy
 `deploy_component()` solo imprime lo recibido; falta el despliegue real (ver steps originales: deploy_component, undeploy_component,

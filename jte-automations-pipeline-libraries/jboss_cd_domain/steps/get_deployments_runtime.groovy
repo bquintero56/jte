@@ -88,14 +88,7 @@ List call() {
 // Ejecuta un comando de jboss-cli por SSH y devuelve la salida. Falla (❌) si no hay conexión/autenticación o si el
 // comando no responde "outcome" => "success".
 String run_cli(String host, String ssh_user, String jboss_home, String credentials_id, String cli_command) {
-    // --controller del domain controller: parámetro JBOSS_CONTROLLER (lo envía el CI desde <ambiente>.jboss_controller de la config del
-    // micro, host:puerto; sin puerto → 9990). Vacío = sin --controller (jboss-cli usa localhost:9990 del servidor al que entra por SSH).
-    def controller = String.valueOf(params.JBOSS_CONTROLLER ?: '').trim()
-    if (controller && !(controller ==~ /[A-Za-z0-9._-]+(:[0-9]{1,5})?/)) {
-        error("[ERROR]: ❌ JBOSS_CONTROLLER no válido: '${controller}' (formato host:puerto, ej. 10.0.0.5:9990).")
-    }
-    def controller_arg = controller ? " --controller=${controller.contains(':') ? controller : controller + ':9990'}" : ''
-    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u=*** -p=*** --command='${cli_command}'\"")
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
 
     def output = ''
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -104,7 +97,7 @@ String run_cli(String host, String ssh_user, String jboss_home, String credentia
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log.
         // 'echo p' acepta el certificado del servidor si jboss-cli lo pregunta. "|| true": la salida se analiza abajo.
         output = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1 || true""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1 || true""",
                     returnStdout: true).trim()
     }
 

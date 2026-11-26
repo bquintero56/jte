@@ -1,5 +1,5 @@
 // Consulta en el JBoss domain del servidor (config.host_deploy) el estado del deployment del componente, con jboss-cli por SSH.
-//   jboss-cli   : <jboss_home>/bin/jboss-cli.sh --connect [--controller=<JBOSS_CONTROLLER>] -u=... -p=... --command="deployment-info --name=<componente>*"
+//   jboss-cli   : <jboss_home>/bin/jboss-cli.sh --connect -u=... -p=... --command="deployment-info --name=<componente>*"
 //   jboss_home  : config.jboss_home (default '/opt/jboss-eap')
 //   credencial  : usuario/clave de administración de JBoss = credencial Username with password config.cli_credentials_id (default 'jboss-cli')
 //   SSH         : <JBOSS_SSH_USER>@<host_deploy> con la llave del nodo de Jenkins
@@ -18,13 +18,6 @@ Map call(String component_name) {
     def ssh_user       = String.valueOf(config.user ?: env.JBOSS_SSH_USER ?: '').trim()
     def jboss_home     = String.valueOf(config.jboss_home ?: '/opt/jboss-eap').trim().replaceFirst(/\/+$/, '')
     def credentials_id = String.valueOf(config.cli_credentials_id ?: 'jboss-cli').trim()
-    // --controller del domain controller: parámetro JBOSS_CONTROLLER (lo envía el CI desde <ambiente>.jboss_controller de la config del
-    // micro, host:puerto; sin puerto → 9990). Vacío = sin --controller (jboss-cli usa localhost:9990 del servidor al que entra por SSH).
-    def controller = String.valueOf(params.JBOSS_CONTROLLER ?: '').trim()
-    if (controller && !(controller ==~ /[A-Za-z0-9._-]+(:[0-9]{1,5})?/)) {
-        error("[ERROR]: ❌ JBOSS_CONTROLLER no válido: '${controller}' (formato host:puerto, ej. 10.0.0.5:9990).")
-    }
-    def controller_arg = controller ? " --controller=${controller.contains(':') ? controller : controller + ':9990'}" : ''
 
     if (!host) {
         error('[ERROR]: ❌ Falta jboss_cd_domain.host_deploy en la config del servidor.')
@@ -42,7 +35,7 @@ Map call(String component_name) {
     println("[INFO]: Consultando el estado de '${component_name}' en JBoss domain (${host})")
 
     def cli_command = "deployment-info --name=${component_name}*"
-    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u=*** -p=*** --command='${cli_command}'\"")
+    println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u=*** -p=*** --command='${cli_command}'\"")
 
     def output = ''
     withCredentials([usernamePassword(credentialsId: credentials_id,
@@ -51,7 +44,7 @@ Map call(String component_name) {
         // Usuario y clave como variables del SHELL (\$...): no se interpolan en Groovy ni quedan en el log.
         // 'echo p' acepta el certificado del servidor si jboss-cli lo pregunta. "|| true": la salida se analiza abajo.
         output = sh(script: """#!/bin/sh
-ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1 || true""",
+ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} "echo p | ${jboss_home}/bin/jboss-cli.sh --connect -u='\$JBOSS_CLI_USER' -p='\$JBOSS_CLI_PASSWORD' --command='${cli_command}'" 2>&1 || true""",
                     returnStdout: true).trim()
     }
 
