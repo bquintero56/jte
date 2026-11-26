@@ -88,7 +88,13 @@ List call() {
 // Ejecuta un comando de jboss-cli por SSH y devuelve la salida. Falla (❌) si no hay conexión/autenticación o si el
 // comando no responde "outcome" => "success".
 String run_cli(String host, String ssh_user, String jboss_home, String credentials_id, String cli_command) {
-    def controller_arg = jboss_controller_argument()      // ' --controller=<host>:<puerto>' (JBOSS_CONTROLLER del micro) o ''
+    // --controller del domain controller: parámetro JBOSS_CONTROLLER (lo envía el CI desde <ambiente>.jboss_controller de la config del
+    // micro, host:puerto; sin puerto → 9990). Vacío = sin --controller (jboss-cli usa localhost:9990 del servidor al que entra por SSH).
+    def controller = String.valueOf(params.JBOSS_CONTROLLER ?: '').trim()
+    if (controller && !(controller ==~ /[A-Za-z0-9._-]+(:[0-9]{1,5})?/)) {
+        error("[ERROR]: ❌ JBOSS_CONTROLLER no válido: '${controller}' (formato host:puerto, ej. 10.0.0.5:9990).")
+    }
+    def controller_arg = controller ? " --controller=${controller.contains(':') ? controller : controller + ':9990'}" : ''
     println("[INFO]: Comando enviado: ssh -o BatchMode=yes -o ConnectTimeout=15 ${ssh_user}@${host} \"echo p | ${jboss_home}/bin/jboss-cli.sh --connect${controller_arg} -u=*** -p=*** --command='${cli_command}'\"")
 
     def output = ''
