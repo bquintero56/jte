@@ -244,8 +244,8 @@ Librería `jboss_ci` (lado CI, config del micro; dev, qa, uat, main; no en defau
 como excepción), la misma que leerá el CD; `jboss_temporary_path()` valida la ruta antes del `rm -rf`. `copy_artifact_on_server` copia
 el único `*.<component_packaging>` de `artifact_workspace_location` con `scp`. `trigger_jboss_deploy_job(<amb>.deployment_project,
 parámetros, wait)` lanza cada job de CD (COMPONENT_NAME, COMPONENT_PACKAGING) con `propagate: false` y revisa el resultado: SUCCESS sigue,
-UNSTABLE → amarillo y sigue, otro → detiene. `remove_temporary_folder` va en el `finally` (si
-`temporary_folder_created`): borra en todos los hosts, nunca lanza error (no tapa el error original); si no puede borrar en alguno → [WARN] + UNSTABLE.
+UNSTABLE → amarillo y sigue, otro → detiene. `remove_temporary_folder` va en el `finally` (siempre, sin
+bandera): borra en todos los hosts, nunca lanza error (no tapa el error original); si no puede borrar en alguno → [WARN] + UNSTABLE.
 CD: template `jboss-deployment/jboss_deployment.groovy` (declara los parámetros COMPONENT_NAME / COMPONENT_PACKAGING), librerías `jboss_cd_standalone` / `jboss_cd_domain`
 (`host_deploy` String obligatorio: un host por config; `user` opcional; la carpeta del artefacto es
 `<JBOSS_TEMP_PATH>/<COMPONENT_NAME>`, la misma del CI, sin `path` en la config). `get_deployment_info(componente)` consulta por SSH

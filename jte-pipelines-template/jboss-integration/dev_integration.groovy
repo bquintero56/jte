@@ -22,9 +22,6 @@ properties([
     gitLabConnection(gitLabConnection: 'api-gitlab_connection_java_repositorie')   // conexión GitLab (System) para el estado por etapa
 ])
 
-// true desde que se empieza a crear la carpeta temporal: el finally la borra aunque el pipeline falle
-def temporary_folder_created = false
-
 // Parámetros para el job de CD (despliegue) y si se espera a que termine
 def wait_job_execution = true
 def jboss_pipeline_parameters = [
@@ -46,7 +43,6 @@ timeout(time: execution.time, unit: execution.units) {
                 }
 
                 gitlab_stage('JBoss: create temporary folder') {
-                    temporary_folder_created = true      // antes de crear: si falla en el 2.º host, el 1.º ya la tiene
                     create_temporary_folder()
                 }
 
@@ -65,11 +61,9 @@ timeout(time: execution.time, unit: execution.units) {
                 error("${e.message ?: e.toString()}")
             }
             finally {
-                // Siempre (éxito, fallo o abort): borra la carpeta temporal de los servidores si se llegó a crear
-                if (temporary_folder_created) {
-                    stage('JBoss: remove temporary folder') {
-                        remove_temporary_folder()
-                    }
+                // Siempre (éxito, fallo o abort): borra la carpeta temporal de los servidores (si no existe, rm -rf no hace nada)
+                stage('JBoss: remove temporary folder') {
+                    remove_temporary_folder()
                 }
                 clean_job_workspace()
             }
