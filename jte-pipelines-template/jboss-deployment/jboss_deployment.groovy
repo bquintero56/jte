@@ -7,7 +7,8 @@ properties([
     disableConcurrentBuilds(),
     parameters([
         string(name: 'COMPONENT_NAME',      defaultValue: '', description: 'Nombre del componente (lo envía el CI)'),
-        string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)')
+        string(name: 'COMPONENT_PACKAGING', defaultValue: '', description: 'Empaquetado: war, ear, jar... (lo envía el CI)'),
+        string(name: 'JBOSS_CONTROLLER',    defaultValue: '', description: 'Domain controller host:puerto para jboss-cli --controller (solo JBoss domain; lo envía el CI). Vacío = localhost:9990')
     ])
 ])
 
@@ -22,6 +23,11 @@ timeout(time: execution.time, unit: execution.units) {
         withFolderProperties {
             try {
                 currentBuild.description = "${params.COMPONENT_NAME ?: '-'}.${params.COMPONENT_PACKAGING ?: '-'}"
+
+                // Todos los deployments del servidor con su estado (standalone: del servidor; domain: de sus server groups)
+                stage('JBoss: deployments runtime') {
+                    get_deployments_runtime()
+                }
 
                 stage('JBoss: deployment info') {
                     deployment_info = get_deployment_info(params.COMPONENT_NAME)

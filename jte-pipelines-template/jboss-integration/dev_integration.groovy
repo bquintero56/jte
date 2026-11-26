@@ -24,9 +24,13 @@ properties([
 
 // Parámetros para el job de CD (despliegue) y si se espera a que termine
 def wait_job_execution = true
+// Domain controller (host:puerto) para jboss-cli --controller: dev.jboss_controller de la config del micro.
+// Solo lo usa JBoss DOMAIN; si el micro no lo define va vacío (localhost:9990) y standalone lo ignora.
+def jboss_controller = String.valueOf(dev.jboss_controller ?: '').trim()
 def jboss_pipeline_parameters = [
     string(name: 'COMPONENT_NAME',      value: component_name),
-    string(name: 'COMPONENT_PACKAGING', value: component_packaging)
+    string(name: 'COMPONENT_PACKAGING', value: component_packaging),
+    string(name: 'JBOSS_CONTROLLER',    value: jboss_controller)
 ]
 
 timeout(time: execution.time, unit: execution.units) {
