@@ -5,7 +5,7 @@ application_environments {
         short_name         = 'dev'
         deployment_project = ['pais/jboss-server/app1/dev/jboss-ui-deployment']   // AJUSTAR: jobs de CD (pais/jboss-server/<app>/<ambiente>/<servidor>-deployment)
         // jboss_controller = '10.0.0.5:9990'        // solo JBoss DOMAIN: domain controller host:puerto (entre comillas) para jboss-cli --controller
-        // server_groups    = ['main-server-group']  // solo JBoss DOMAIN: server groups del micro (lista, cada uno entre comillas)
+        // server_group     = 'main-server-group'    // solo JBoss DOMAIN: server group del micro (uno solo, entre comillas)
     }
 }
 

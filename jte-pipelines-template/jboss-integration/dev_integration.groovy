@@ -27,14 +27,14 @@ def wait_job_execution = true
 // Domain controller (host:puerto) para jboss-cli --controller: dev.jboss_controller de la config del micro.
 // Solo lo usa JBoss DOMAIN; si el micro no lo define va vacío (localhost:9990) y standalone lo ignora.
 def jboss_controller = String.valueOf(dev.jboss_controller ?: '').trim()
-// Server groups (lista) donde vive el micro en JBoss DOMAIN: dev.server_groups de la config del micro. Viajan separados por coma.
-// Si el micro no los define van vacíos; standalone los ignora.
-def jboss_server_groups = (dev.server_groups ?: []).collect { String.valueOf(it).trim() }.findAll { it }.join(',')
+// Server group donde vive el micro en JBoss DOMAIN: dev.server_group de la config del micro (uno solo).
+// Si el micro no lo define va vacío; standalone lo ignora.
+def jboss_server_group = String.valueOf(dev.server_group ?: '').trim()
 def jboss_pipeline_parameters = [
     string(name: 'COMPONENT_NAME',      value: component_name),
     string(name: 'COMPONENT_PACKAGING', value: component_packaging),
     string(name: 'JBOSS_CONTROLLER',    value: jboss_controller),
-    string(name: 'SERVER_GROUPS',       value: jboss_server_groups)
+    string(name: 'SERVER_GROUP',        value: jboss_server_group)
 ]
 
 timeout(time: execution.time, unit: execution.units) {
