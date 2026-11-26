@@ -28,6 +28,9 @@ Boolean call(String component_name, String component_packaging) {
         error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd_domain.user en la config).')
     }
 
+    if (!config.server_groups) {
+        error("[ERROR]: ❌ Falta jboss_cd_domain.server_groups en la config del servidor: en domain hay que indicar a qué server groups desplegar (ej. ['main-server-group']).")
+    }
     def target_args = " --server-groups=${config.server_groups.join(',')}"
 
     def temp_dir = "${temp_base}/${name}"

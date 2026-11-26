@@ -26,11 +26,18 @@ List call() {
     if (!ssh_user) {
         error('[ERROR]: ❌ Falta el usuario SSH de JBoss: definir la propiedad de carpeta JBOSS_SSH_USER (o jboss_cd_domain.user en la config).')
     }
+    // Sin server_groups en la config: se consultan TODOS los server groups del domain
     if (!server_groups) {
-        error('[ERROR]: ❌ Falta jboss_cd_domain.server_groups en la config del servidor (ej. [\'main-server-group\']).')
+        println('[INFO]: jboss_cd_domain.server_groups no está en la config: se consultan todos los server groups del domain')
+        server_groups = parse_server_group_names(run_cli(host, ssh_user, jboss_home, credentials_id,
+                                                         ':read-children-names(child-type=server-group)'))
+        if (!server_groups) {
+            println("[WARN]: ⚠️ El domain de ${host} no tiene server groups")
+            return []
+        }
     }
     server_groups.each { group ->
-        if (!(group ==~ /[A-Za-z0-9._-]+/)) {
+        if (!group.matches('[A-Za-z0-9._-]+')) {
             error("[ERROR]: ❌ Server group no válido para jboss-cli: '${group}'.")
         }
     }
@@ -172,6 +179,21 @@ List parse_deployments(String output) {
         }
     }
     return deployments
+}
+
+// Salida de :read-children-names(child-type=server-group) → ['main-server-group', 'other-server-group']
+//   "result" => ["main-server-group", "other-server-group"]
+@NonCPS
+List parse_server_group_names(String output) {
+    def names  = []
+    def result = (output =~ /(?s)"result"\s*=>\s*\[(.*?)\]/)
+    if (result.find()) {
+        def item = (result.group(1) =~ /"([^"]+)"/)
+        while (item.find()) {
+            names << item.group(1)
+        }
+    }
+    return names
 }
 
 // Salida de /host=*/server=*:read-attribute(name=server-group) → [[host, server, group], ...] (solo servidores en ejecución).

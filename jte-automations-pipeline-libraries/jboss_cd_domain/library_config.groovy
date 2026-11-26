@@ -9,9 +9,11 @@
 fields {
     required {
         host_deploy        = String    // host del servidor JBoss donde se despliega (uno por config)
-        server_groups      = List      // server groups del domain donde se despliega (ej. ['main-server-group'])
     }
     optional {
+        server_groups      = List      // server groups del domain (ej. ['main-server-group']). Obligatorio para deploy_component;
+                                       // si no va, get_deployments_runtime consulta TODOS los server groups del domain
+
         user               = String    // solo si este servidor usa otro usuario SSH (por defecto: propiedad de carpeta JBOSS_SSH_USER)
         jboss_home         = String    // ruta de JBoss en el servidor (default '/opt/jboss-eap')
         cli_credentials_id = String    // credencial Username with password del usuario de administración de JBoss (default 'jboss-cli')
