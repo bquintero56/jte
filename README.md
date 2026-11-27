@@ -134,3 +134,20 @@ existen no se tocan**; los nuevos van en un solo commit (directo a `TARGET_BRANC
 1. Editar la configuración del script: `GITLAB_URL` (con la subruta), `GITLAB_API_TOKEN`, `CONFIG_PROJECT`, `TARGET_BRANCH`,
    `CONFIG_PATH_TEMPLATE` (`{appcode}`, `{micro}`), `APPCODE` (uno por corrida) y `MICROS` (solo los nombres).
 2. Ejecutar `python3 webhooks/create_micro_configs.py --dry-run` y luego sin `--dry-run`.
+
+### Dar de alta un micro completo con un solo script
+
+`webhooks/create_micro_setup.py` (Python 3, solo librería estándar) hace los tres pasos anteriores para **un** micro, en este orden:
+
+1. **Config:** crea `default-integration-config.groovy` del micro en el repo de configuraciones de GitLab (plantilla
+   `webhooks/templates/default-integration-config.groovy`).
+2. **Webhooks:** crea o actualiza los webhooks de Push y de Merge Request en el repo del micro (`<PAIS>/<APPCODE>/<micro>`).
+3. **Pipelines:** crea en Jenkins `<PAIS>/<APPCODE>/<micro>/{integration, dev, qa, uat}` con la definición JTE.
+
+Antes de cambiar nada valida que existan el repo del micro, el de configuraciones y el acceso a Jenkins. Lo que ya existe no se
+sobrescribe. Si un paso falla, no hace los siguientes. `CONFIG_PATH_TEMPLATE` es la misma ruta para el archivo del paso 1 y para los jobs del paso 3.
+
+1. Editar la configuración del script una vez (GitLab, Jenkins, URLs de los webhooks, `CONFIG_PROJECT`, `CONFIG_PATH_TEMPLATE`, `PAIS`, `APPCODE`).
+2. Ejecutar con el nombre del micro: `python3 webhooks/create_micro_setup.py micro1 --dry-run` y luego sin `--dry-run`.
+3. Tokens (GitLab, Secret token de los webhooks, usuario y API token de Jenkins) en los campos del script, en variables de entorno con
+   el mismo nombre, o se piden al ejecutar.
