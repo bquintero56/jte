@@ -123,3 +123,14 @@ tocan** (no se sobrescriben). Los archivos de config de cada micro se crean a ma
 2. Ejecutar `python3 webhooks/create_micro_pipelines.py --dry-run` y luego sin `--dry-run`.
 3. Usuario y **API token de Jenkins** en `JENKINS_USER` / `JENKINS_API_TOKEN` (o variables de entorno, o se piden al ejecutar). Proxy:
    `PROXY_URL` o `JENKINS_PROXY_URL`.
+
+### Crear la config `default` de los micros en GitLab con script
+
+`webhooks/create_micro_configs.py` (Python 3, solo librería estándar) crea en el repo de configuraciones de GitLab
+`.../jboss-micro/<APPCODE>/<micro>/pipeline_configurations/default-integration-config.groovy` de cada micro, a partir de la plantilla
+`webhooks/templates/default-integration-config.groovy` (solo cambia `__COMPONENT_NAME__` por el nombre del micro). Los archivos que **ya
+existen no se tocan**; los nuevos van en un solo commit (directo a `TARGET_BRANCH` o por Merge Request con `CREATE_MERGE_REQUEST = True`).
+
+1. Editar la configuración del script: `GITLAB_URL` (con la subruta), `GITLAB_API_TOKEN`, `CONFIG_PROJECT`, `TARGET_BRANCH`,
+   `CONFIG_PATH_TEMPLATE` (`{appcode}`, `{micro}`), `APPCODE` (uno por corrida) y `MICROS` (solo los nombres).
+2. Ejecutar `python3 webhooks/create_micro_configs.py --dry-run` y luego sin `--dry-run`.
