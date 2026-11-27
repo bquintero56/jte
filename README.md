@@ -111,3 +111,15 @@ Si el repo ya tiene un webhook con la misma URL, lo actualiza en vez de duplicar
 
 **Proxy:** poner `PROXY_URL` en cada script (ej. `http://proxy.empresa.com:8080`, sin usuario ni clave) o la variable `GITLAB_PROXY_URL`;
 vacío = se usa `HTTPS_PROXY` del entorno si existe. Si el proxy pide usuario: variable `PROXY_USER` (la clave se pide al ejecutar o va en `PROXY_PASSWORD`).
+
+### Crear los pipelines de los micros con script
+
+`webhooks/create_micro_pipelines.py` (Python 3, solo librería estándar) crea en Jenkins `<pais>/<appcode>/<micro>/{dev, qa, uat}` con la
+definición JTE (repo de configuraciones + `pipelineConfigurationPath` de cada ambiente). Las carpetas y los jobs que **ya existen no se
+tocan** (no se sobrescriben). Los archivos de config de cada micro se crean a mano en el repo de configuraciones.
+
+1. Editar la configuración del script: `JENKINS_URL` (base, sin `/` final), `CONFIG_REPO_URL` / `CONFIG_REPO_CREDENTIALS_ID` /
+   `CONFIG_REPO_BRANCH` (los del job que ya funciona), `CONFIG_PATH_TEMPLATE` (`{pais}`, `{appcode}`, `{micro}`, `{env}`), `ENVIRONMENTS` y `MICROS`.
+2. Ejecutar `python3 webhooks/create_micro_pipelines.py --dry-run` y luego sin `--dry-run`.
+3. Usuario y **API token de Jenkins** en `JENKINS_USER` / `JENKINS_API_TOKEN` (o variables de entorno, o se piden al ejecutar). Proxy:
+   `PROXY_URL` o `JENKINS_PROXY_URL`.
