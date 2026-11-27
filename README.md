@@ -114,12 +114,12 @@ vacío = se usa `HTTPS_PROXY` del entorno si existe. Si el proxy pide usuario: v
 
 ### Crear los pipelines de los micros con script
 
-`webhooks/create_micro_pipelines.py` (Python 3, solo librería estándar) crea en Jenkins `<pais>/<appcode>/<micro>/{dev, qa, uat}` con la
+`webhooks/create_micro_pipelines.py` (Python 3, solo librería estándar) crea en Jenkins `<pais>/<appcode>/<micro>/{integration, dev, qa, uat}` con la
 definición JTE (repo de configuraciones + `pipelineConfigurationPath` de cada ambiente). Las carpetas y los jobs que **ya existen no se
 tocan** (no se sobrescriben). Los archivos de config de cada micro se crean a mano en el repo de configuraciones.
 
 1. Editar la configuración del script: `JENKINS_URL` (base, sin `/` final), `CONFIG_REPO_URL` / `CONFIG_REPO_CREDENTIALS_ID` /
-   `CONFIG_REPO_BRANCH` (los del job que ya funciona), `CONFIG_PATH_TEMPLATE` (`{pais}`, `{appcode}`, `{micro}`, `{env}`), `ENVIRONMENTS` y `MICROS`.
+   `CONFIG_REPO_BRANCH` (los del job que ya funciona), `CONFIG_PATH_TEMPLATE` (`{pais}`, `{appcode}`, `{micro}`, `{config}`), `PIPELINES` y `MICROS`.
 2. Ejecutar `python3 webhooks/create_micro_pipelines.py --dry-run` y luego sin `--dry-run`.
 3. Usuario y **API token de Jenkins** en `JENKINS_USER` / `JENKINS_API_TOKEN` (o variables de entorno, o se piden al ejecutar). Proxy:
    `PROXY_URL` o `JENKINS_PROXY_URL`.

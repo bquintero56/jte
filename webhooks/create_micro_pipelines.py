@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Crea en Jenkins los pipelines JTE de cada micro: <pais>/<appcode>/<micro>/{dev, qa, uat}.
+Crea en Jenkins los pipelines JTE de cada micro: <pais>/<appcode>/<micro>/{integration, dev, qa, uat}.
 
 Cada job queda con la definición "Jenkins Templating Engine" (AdHocTemplateFlowDefinition) apuntando al repo de configuraciones
-y a SU archivo de config (dev → dev-integration-config.groovy, qa → qa-..., uat → uat-...). Los archivos de config de cada micro se
+y a SU archivo de config (integration → default-integration-config.groovy, dev → dev-..., qa → qa-..., uat → uat-...). Los archivos de config de cada micro se
 crean a mano en el repo; este script solo crea los jobs que apuntan a ellos.
   - Carpetas (<pais>, <appcode>, <micro>): se crean solo si no existen.
   - Jobs: si YA EXISTEN no se tocan (no se sobrescriben); solo se crean los que faltan.
@@ -49,8 +49,8 @@ CONFIG_REPO_URL = 'https://gitlab.ejemplo.com/grupo/pipelines.git'
 CONFIG_REPO_CREDENTIALS_ID = 'GITLAB_CLONE'      # ID de la credencial de Jenkins para clonar ese repo
 CONFIG_REPO_BRANCH = '*/main'
 
-# Ruta del archivo de config dentro del repo. Variables: {pais}, {appcode}, {micro}, {env}
-CONFIG_PATH_TEMPLATE = 'jte-jboss-configurations/jboss-micro/{appcode}/{micro}/pipeline_configurations/{env}-integration-config.groovy'
+# Ruta del archivo de config dentro del repo. Variables: {pais}, {appcode}, {micro}, {config} (prefijo del archivo, ver PIPELINES)
+CONFIG_PATH_TEMPLATE = 'jte-jboss-configurations/jboss-micro/{appcode}/{micro}/pipeline_configurations/{config}-integration-config.groovy'
 
 # GitLab connection del GitLab Plugin (Manage Jenkins → System → GitLab → Connection name). Es distinta de la credencial de clonado.
 # Vacío = el job se crea sin GitLab connection.
@@ -59,8 +59,14 @@ GITLAB_CONNECTION = 'gitlab'
 # Campo "Pipeline Template Path" del job (igual que en tu job actual; el template real lo elige la config con pipeline_template)
 PIPELINE_TEMPLATE_PATH = 'Jenkinsfile'
 
-# Pipelines que se crean dentro de cada micro (nombre del job = {env})
-ENVIRONMENTS = ['dev', 'qa', 'uat']
+# Pipelines que se crean dentro de cada micro: nombre del job → prefijo de su archivo de config ({config}-integration-config.groovy).
+#   integration usa default-integration-config.groovy (cualquier rama que no sea de ambiente).
+PIPELINES = {
+    'integration': 'default',
+    'dev': 'dev',
+    'qa': 'qa',
+    'uat': 'uat',
+}
 
 # Micros: ruta en Jenkins <pais>/<appcode>/<micro> (la misma que en GitLab)
 MICROS = [
@@ -203,7 +209,7 @@ def ensure_folders(path_parts, dry_run, summary):
         summary['folders_created'] += 1
 
 
-def ensure_job(micro_parts, env, dry_run, summary):
+def ensure_job(micro_parts, env, config_name, dry_run, summary):
     pais, appcode, micro = micro_parts[-3], micro_parts[-2], micro_parts[-1]
     job_parts = micro_parts + [env]
     full = '/'.join(job_parts)
@@ -213,7 +219,7 @@ def ensure_job(micro_parts, env, dry_run, summary):
         summary['jobs_existing'] += 1
         return
 
-    config_path = CONFIG_PATH_TEMPLATE.format(pais=pais, appcode=appcode, micro=micro, env=env)
+    config_path = CONFIG_PATH_TEMPLATE.format(pais=pais, appcode=appcode, micro=micro, config=config_name)
     connection = GITLAB_CONNECTION.strip()
     xml = JOB_XML.format(
         gitlab_connection_property=GITLAB_CONNECTION_XML.format(connection=escape(connection)) if connection else '',
@@ -235,8 +241,8 @@ def main():
 
     if not MICROS:
         sys.exit('[ERROR]: ❌ MICROS está vacío: agrega las rutas <pais>/<appcode>/<micro>.')
-    if not ENVIRONMENTS:
-        sys.exit('[ERROR]: ❌ ENVIRONMENTS está vacío.')
+    if not PIPELINES:
+        sys.exit('[ERROR]: ❌ PIPELINES está vacío.')
 
     user = (JENKINS_USER or os.environ.get('JENKINS_USER') or input('Usuario de Jenkins: ')).strip()
     token = (JENKINS_API_TOKEN or os.environ.get('JENKINS_API_TOKEN') or getpass.getpass('API token de Jenkins: ')).strip()
@@ -246,7 +252,7 @@ def main():
     AUTH_HEADER = 'Basic ' + b64encode(f'{user}:{token}'.encode('utf-8')).decode('ascii')
     OPENER = build_opener()
 
-    print(f'[INFO]: Jenkins: {JENKINS_URL} | micros: {len(MICROS)} | pipelines por micro: {", ".join(ENVIRONMENTS)}'
+    print(f'[INFO]: Jenkins: {JENKINS_URL} | micros: {len(MICROS)} | pipelines por micro: {", ".join(PIPELINES)}'
           f'{" | DRY-RUN (no se cambia nada)" if dry_run else ""}')
 
     summary = {'folders_seen': set(), 'folders_created': 0, 'jobs_created': 0, 'jobs_existing': 0}
@@ -259,8 +265,8 @@ def main():
             continue
         try:
             ensure_folders(micro_parts, dry_run, summary)
-            for env in ENVIRONMENTS:
-                ensure_job(micro_parts, env, dry_run, summary)
+            for env, config_name in PIPELINES.items():
+                ensure_job(micro_parts, env, config_name, dry_run, summary)
         except RuntimeError as error:
             print(f'[ERROR]: ❌ {micro_path}: {error}')
             failed.append(micro_path)
