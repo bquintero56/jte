@@ -7,8 +7,8 @@ y a SU archivo de config (dev → dev-integration-config.groovy, qa → qa-..., 
 crean a mano en el repo; este script solo crea los jobs que apuntan a ellos.
   - Carpetas (<pais>, <appcode>, <micro>): se crean solo si no existen.
   - Jobs: si YA EXISTEN no se tocan (no se sobrescriben); solo se crean los que faltan.
-  - Las propiedades del job (log rotator, GitLab connection, variables...) las pone el template en la primera ejecución
-    (properties([...])): la plantilla del job solo lleva la definición JTE.
+  - La GitLab connection (GITLAB_CONNECTION) va en el job desde que se crea. Las demás propiedades (log rotator, variables...)
+    las pone el template en la primera ejecución (properties([...])).
 
 Uso (solo librería estándar de Python 3, sin pip install):
   1. Editar la CONFIGURACIÓN de abajo (URL de Jenkins, repo de configuraciones, ruta de las configs y MICROS).
@@ -52,6 +52,10 @@ CONFIG_REPO_BRANCH = '*/main'
 # Ruta del archivo de config dentro del repo. Variables: {pais}, {appcode}, {micro}, {env}
 CONFIG_PATH_TEMPLATE = 'jte-jboss-configurations/jboss-micro/{appcode}/{micro}/pipeline_configurations/{env}-integration-config.groovy'
 
+# GitLab connection del GitLab Plugin (Manage Jenkins → System → GitLab → Connection name). Es distinta de la credencial de clonado.
+# Vacío = el job se crea sin GitLab connection.
+GITLAB_CONNECTION = 'gitlab'
+
 # Campo "Pipeline Template Path" del job (igual que en tu job actual; el template real lo elige la config con pipeline_template)
 PIPELINE_TEMPLATE_PATH = 'Jenkinsfile'
 
@@ -78,7 +82,7 @@ JOB_XML = """<?xml version='1.1' encoding='UTF-8'?>
 <flow-definition>
   <description>{description}</description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>{gitlab_connection_property}</properties>
   <definition class="org.boozallen.plugins.jte.job.AdHocTemplateFlowDefinition">
     <configProvider class="org.boozallen.plugins.jte.job.ScmAdHocTemplateFlowDefinitionConfiguration">
       <scm class="hudson.plugins.git.GitSCM">
@@ -106,6 +110,13 @@ JOB_XML = """<?xml version='1.1' encoding='UTF-8'?>
   <disabled>false</disabled>
 </flow-definition>
 """
+
+GITLAB_CONNECTION_XML = """
+    <com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty plugin="gitlab-plugin">
+      <gitLabConnection>{connection}</gitLabConnection>
+      <useAlternativeCredential>false</useAlternativeCredential>
+    </com.dabsquared.gitlabjenkins.connection.GitLabConnectionProperty>
+  """
 
 OPENER = None
 AUTH_HEADER = ''
@@ -203,7 +214,9 @@ def ensure_job(micro_parts, env, dry_run, summary):
         return
 
     config_path = CONFIG_PATH_TEMPLATE.format(pais=pais, appcode=appcode, micro=micro, env=env)
+    connection = GITLAB_CONNECTION.strip()
     xml = JOB_XML.format(
+        gitlab_connection_property=GITLAB_CONNECTION_XML.format(connection=escape(connection)) if connection else '',
         description=escape(f'Pipeline {env} de {micro} (creado por create_micro_pipelines.py)'),
         repo_url=escape(CONFIG_REPO_URL),
         credentials_id=escape(CONFIG_REPO_CREDENTIALS_ID),
